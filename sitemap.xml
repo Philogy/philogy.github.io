@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+<url>
+<loc>https://philogy.github.io/posts/test-blog/</loc>
+<lastmod>2022-07-05T13:18:00+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/categories/</loc>
+<lastmod>2022-07-11T00:27:54+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/tags/</loc>
+<lastmod>2022-07-11T00:27:54+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/archives/</loc>
+<lastmod>2022-07-11T00:27:54+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/about/</loc>
+<lastmod>2022-07-11T00:27:54+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/imprint/</loc>
+<lastmod>2022-07-11T00:27:54+02:00</lastmod>
+</url>
+<url>
+<loc>https://philogy.github.io/</loc>
+</url>
+</urlset>

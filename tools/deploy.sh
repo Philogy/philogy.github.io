@@ -116,6 +116,8 @@ deploy() {
   else
     git push -f
   fi
+
+  rm -rf assets/lib
 }
 
 main() {

@@ -1,4 +1,0 @@
-[submodule "assets/lib"]
-	path = assets/lib
-	url = git@github.com:cotes2020/chirpy-static-assets.git
-	branch = main

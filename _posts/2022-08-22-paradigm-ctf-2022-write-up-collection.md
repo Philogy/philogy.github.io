@@ -19,7 +19,7 @@ Checkout the [Glossary]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collec
 For the 13 EVM related challenges (not counting 0xMonaco, underhanded 2022) the goal was to get the `Setup` contract's `isSolved` method to return `true`  so that the flag could be retrieved from the server. The contracts were deployed to a private chain which was forked off of mainnet. This is an important detail as not all contracts were provided by the CTF, some were just the mainnet contracts which you then had to look at on etherscan.
  
 
-## 🚩 Hint Finance
+## Hint Finance 🚩
 
 > "Earn rewards without risk by depositing tokens into one of HintFinance's vaults!"
 
@@ -216,7 +216,7 @@ Finally I just nest the calls and use `transferFrom` to transfer the tokens out 
 ### Hint Finance - Conclusion
 The Hint Finance challenge reminds us that we should always be wary of external calls to user controllable addresses and that you should always assume that ERC20 tokens can reenter upon transfers, just like ETH.
 
-## 🚩 Just In Time (JIT)
+## Just In Time (JIT) 🚩
 Write-up coming soon!
 
 

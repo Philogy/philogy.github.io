@@ -10,7 +10,7 @@ tags: [solidity, EVM, security, smart contracts]
 {: .prompt-danger}
 
 ## Intro
-I participated in the Paradigm CTF 2022 where I was personally able to solve 6 out of the 21 total challenges: ✅ [Hint Finance](#-hint-finance), [Just-in-Time](#-just-in-time), Merkledrop, Rescue, Sourcecode and Vanity (The check-marks represent which challenges I've written up in this post, some I may add later and for others I'll link to other write-ups). I only got first blood on Hint Finance 🏅. I made a few 0xmonaco cars, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours.
+I participated in the Paradigm CTF 2022 where I was personally able to solve 6 out of the 21 total challenges: ✅ Hint Finance, Just-in-Time, Merkledrop, Rescue, Sourcecode and Vanity (The check-marks represent which challenges I've written up in this post, some I may add later and for others I'll link to other write-ups). I only got first blood on Hint Finance 🏅. I made a few 0xmonaco cars, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours.
 
 Shout out to my team the [notfellows](https://twitter.com/notfellows)! 😄
 

@@ -9,7 +9,7 @@ tags: [solidity, EVM, security, smart contracts]
 
 ## Glossary
 The following is a breakdown of the Paradigm CTF 2022 with links to respsective
-write-ups. Challenges are sorted by total solves.
+write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](https://twitter.com/0xfoobar/status/1561529252029276161) for links to some of the write-ups.
 
 - ✅ Means personally solved (for 0xmonaco just means participated)
 - ❌ Did not solve

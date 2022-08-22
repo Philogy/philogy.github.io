@@ -16,7 +16,7 @@ write-ups. Challenges are sorted by total solves.
 
 **EVM (Solidity) Challenges:**
 
-- ✅ 0xMonaco ([thread](https://twitter.com/sudolabel/status/1561512456291172352))
+- ✅ 0xMonaco ([thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
 - ❌ Solidity Underhanded 2022
 - ❌ Fun Reversing Challenge
 - ❌ Stealing Sats

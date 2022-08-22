@@ -6,11 +6,48 @@ tags: [solidity, EVM, security, smart contracts]
 
 ---
 
-> **Disclaimer:** Tokens mentioned in this article are not endorsed in anyway, they were just part of the challenges.
-{: .prompt-danger}
+
+## Glossary
+The following is a breakdown of the Paradigm CTF 2022 with links to respsective
+write-ups. Challenges are sorted by total solves.
+
+- ✅ Means personally solved (for 0xmonaco just means participated)
+- ❌ Did not solve
+
+**EVM (Solidity) Challenges:**
+
+- ✅ 0xMonaco ([thread](https://twitter.com/sudolabel/status/1561512456291172352))
+- ❌ Solidity Underhanded 2022
+- ❌ Fun Reversing Challenge
+- ❌ Stealing Sats
+- ❌ Electric Sheep
+- ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-just-in-time-jit)
+- ❌ Trapdoooor
+- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-hint-finance) 🏅 (first blood)
+- ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
+- ❌ Lockbox 2
+- ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)
+- ✅ Sourcecode 
+- ✅ Merkledrop
+- ✅ Rescue
+- ❌ Random
+
+**Solana Challenges:**
+- ❌ [Solhana 3](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Solhana 2](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Solhana 1](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Otter Swap](https://twitter.com/NotDeGhost/status/1561545438897078273)
+- ❌ [Otter World](https://twitter.com/NotDeGhost/status/1561545438897078273)
+
+**Cairo Challenges:**
+- ❌ Cairo Auction
+- ❌ Cairo Proxy
+- ❌ Riddle Of The Sphinx
+
+
 
 ## Intro
-I participated in the Paradigm CTF 2022 where I was personally able to solve 6 out of the 21 total challenges: ✅ Hint Finance, Just-in-Time, Merkledrop, Rescue, Sourcecode and Vanity (The check-marks represent which challenges I've written up in this post, some I may add later and for others I'll link to other write-ups). I only got first blood on Hint Finance 🏅. I made a few 0xmonaco cars, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours.
+I participated in the Paradigm CTF 2022 where I was personally able to solve 6 out of the 21 total challenges (see above). I made a few 0xmonaco cars as well, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours.
 
 Shout out to my team the [notfellows](https://twitter.com/notfellows)! 😄
 
@@ -19,6 +56,7 @@ For the 13 EVM related challenges (not counting 0xmonaco, underhanded 2022) the 
  
 
 ## 🚩 Hint Finance
+
 > "Earn rewards without risk by depositing tokens into one of HintFinance's vaults!"
 
 The famous  last words of many projects.
@@ -121,7 +159,7 @@ Hmmm 🤔, there seems to be only two possibilities left: either I'm wrong about
 
 So I calculated the selector of `onHintFinanceFlashloan`, `0xcae9ca51` and put it in [4byte.directory](https://www.4byte.directory/signatures/?bytes4_signature=0xcae9ca51), a database of function signatures and their selectors. Note that when I looked at 4byte during the challenge `onHintFinanceFlashloan` was not yet uploaded.
 
-I was right, not only is there an alternative function but it was already uploaded to 4byte (I could've been searching much longer if I had to check it manually) and it was also present on the SAND token contract: the `approveAndCall(...)` method! This is exactly what I needed, if you craft the call payload well the vault will simply approve some address you create to spend tokens on its behalf and the tokens will be mine 🤑.
+I was right, not only is there an alternative function but it was already uploaded to 4byte (I could've been searching much longer if I had to check it manually) and it was also present on the token contract: the `approveAndCall(...)` method! This is exactly what I needed, if you craft the call payload well the vault will simply approve some address you create to spend tokens on its behalf and the tokens will be mine 🤑.
 
 ### Hint Finance - Flexible ABI
 
@@ -165,7 +203,7 @@ function flashloan(
 }
 ```
 
-The `flashloan` method calls the caller, not necessarily the token directly meaning we need the SAND token to be the caller somehow and give the vault a specific payload. Thankfully we can just leverage `approveAndCall` again, approving the vault and calling the `flashloan` method.
+The `flashloan` method calls the caller, not necessarily the token directly meaning we need the token to be the caller somehow and give the vault a specific payload. Thankfully we can just leverage `approveAndCall` again, approving the vault and calling the `flashloan` method.
  
 There's a few more tricky bits I had to find out while debugging my exploit as the two colliding methods have different parameters. Let's breakdown the calldata that the vault creates when calling `onHintFinanceFlashloan`:
 ```
@@ -191,11 +229,11 @@ function balanceOf(address) external view returns (uint256) {
 }
 ```
 
-Next you'll notice that the approve amount that the SAND contract receives will be the address of the factory. Considering the SAND token has 18 decimals and an address is about ~1e30 when interpreted as a number that'll be more than enough to drain the contract in one go.
+Next you'll notice that the approve amount that the token contract receives will be the address of the factory. Considering the token has 18 decimals and an address is about ~1e30 when interpreted as a number that'll be more than enough to drain the contract in one go.
 
 A further aspect is that `amount` can't be just anything. If it's `0` and points at an address it'll imply such a large byte-string that `approveAndCall` will just revert when it tries to copy it from calldata to memory. Instead we set it to `0xa0` so that when `approveAndCall` tries to get the data it'll find the `data`  provided by the vault.
 
-Another error I got is `"first param != sender"` from the SAND contract, this is because the `approveAndCall` method enforces that the data has a minimum length and that the first argument is the caller's address. To ensure the correct length and address I set the return payload of the nested call to `approveAndCall` to be:
+Another error I got is `"first param != sender"` from the token contract, this is because the `approveAndCall` method enforces that the data has a minimum length and that the first argument is the caller's address. To ensure the correct length and address I set the return payload of the nested call to `approveAndCall` to be:
 ```solidity
 bytes memory innerPayload = abi.encodeWithSelector(
 	bytes4(0x00000000),

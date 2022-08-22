@@ -1,5 +1,5 @@
 ---
-title: "Paradigm CTF 2022: Write-up collection"
+title: "Paradigm CTF 2022: Write-Up Collection"
 date: 2022-08-22 12:36
 categories: [security-write-ups]
 tags: [solidity, EVM, security, smart contracts]

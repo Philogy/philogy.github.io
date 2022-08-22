@@ -27,7 +27,7 @@ The famous  last words of many projects.
 
 ### Hint Finance - Intro
 
-Incase you're just looking for the code here's my [**solution script**](https://gist.github.com/Philogy/61534359bbdccb016ebf86b21a0cb8a6).
+In case you're just looking for the code here's the [**full script**](https://gist.github.com/Philogy/61534359bbdccb016ebf86b21a0cb8a6) in foundry.
 
 In the Hint Finance challenge the goal was to drain 3 identical vault contracts of at least 99% of their underlying token. While the vaults were identical, the tokens stored in the vaults were different.
 
@@ -35,10 +35,10 @@ The vault contract was set up as a typical reward contract whereby you deposit s
 
 There were also a couple of methods related to rewards but I quickly realized that those were just distractions as you have no way of setting the reward tokens and all the configured reward tokens were not the actual target tokens you're looking to drain
 
-### Hint Finance - Initial ideas 🤔
+### Hint Finance - Initial Ideas 🤔
 Initially I looked at the flashloan method trying to find a way to deposit/withdraw during the loan but due to its design I had to conclude that this was not possible. This is because the flashloan method enforces not only that the tokens be returned but also that the amount of total outstanding vault shares remain constant. This means you can't keep new shares, have existing shares be redeemed or otherwise mess with the share price besides increasing it by returning more tokens than necessary. 
 
-### Hint Finance - ERC777 does it again 😬
+### Hint Finance - ERC777 Does It Again 😬
 After my initial look I remembered that the contracts are forked off mainnet and decided to check their code. There I discovered that 2 of the 3 target tokens were ERC777 tokens.
 
 > ERC777 tokens are token contracts which are backwards compatible with ERC20 but implement added functionality based on the [ERC777 standard](https://eips.ethereum.org/EIPS/eip-777). Most importantly the standard specifies that a token's `transfer` / `transferFrom` methods must function as follows (excluding allowance logic):
@@ -109,7 +109,7 @@ Result is we were able to mint shares "out of thin air", diluting the other depo
 
 I'm not going to detail the implementation of a ERC777 based reentrancy attack, as it's a fairly common thing but you can view my exploit script [here](https://gist.github.com/Philogy/61534359bbdccb016ebf86b21a0cb8a6) if you're interested in the implementation details.
 
-### Hint Finance - The Final Token, how????!!! 😡
+### Hint Finance - The Final Token, How????!!! 😡
 After the first 2 tokens were relatively straight forward I started wondering how I was gonna approach the last one, SAND (ID: 1). Its transfer methods had no strange hooks, the contract file names didn't seem to advertise any unusual standards being implemented so what can I do?
 
 Well I went back to the vault contract and made an inventory of all the potential external calls I could somehow use:
@@ -217,7 +217,128 @@ Finally I just nest the calls and use `transferFrom` to transfer the tokens out 
 The Hint Finance challenge reminds us that we should always be wary of external calls to user controllable addresses and that you should always assume that ERC20 tokens can reenter upon transfers, just like ETH.
 
 ## Just In Time (JIT) 🚩
-Write-up coming soon!
+### JIT - Intro 
+In case you're just looking for the code here's the [**full script**](https://gist.github.com/Philogy/f4f48a29053344ce467c12ff62ebea8a) I wrote to solve the challenge. Considering that only 5 others solved it I am particularly proud of having solved this one. Especially since I really struggled with it: 
+
+![Message from me "I spent half the day just staring at just-in-time sob emoji 😂😭", Georgios Konstantopoulos responds "lmao"](/assets/images/struggling-with-jit.png) 
+
+But after an estimated ~16h of struggle my perceverance paid off and I managed to conquer the challenge!
+
+In the Just-In-Time challenge (referred to as JIT for the remainder) the condition for receiving the flag, was draining the provided `JIT` contract of ETH. The `JIT` contract performs some logic around a provided input `program`, compiling it to EVM bytecode, subsequently deploying it and then delegate calling it. 
+
+> **`DELEGATECALL`**
+>
+> Unlike a normal call, when a contract delegate calls to another it gives it complete control allowing it to modify storage, emit events, call other contracts, transfer ETH and even self destruct on its behalf.
+>
+> While useful for libraries, proxies and complex patterns like [ERC-2535 Diamonds](https://eips.ethereum.org/EIPS/eip-2535), it can open up a lot of attack surface.
+> 
+> For more details refer to [evm.codes](https://www.evm.codes/#f4) or the
+> [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
+{: .prompt-tip}
+
+### JIT - Compiler Structure 🧱
+If we're going to give this JIT compiler a program that'll compile to malicious code we'll have to first understand it. Skimming over the contract and reading the comments we can identify 6 modules / steps:
+
+1. Loop finder: Finds and matches square-brackets `[]` 
+2. Block finder: Based on the loops splits the program into discrete "blocks"  that can be jumped to
+3. Optimizer: Shortens repetitive / inefficient program segments
+4. Code generator: Generates the main meat of the code, translating jit symbols into EVM bytecode and keeping track of where blocks start and end in the bytecode. 
+5. Label filler: Inserts the actual jump locations into the code.
+6. Deployer: Inserts the code length into the constructor, deploys and executes the code
+
+Side note: Looking at the basic set of symbols `[],.+-<>`, the "jit language"  seems to be a super set of [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck), a minimalistic, turing complete language.
+
+### JIT - Desired Code 
+Before we trick the compiler into generating malicious code we need to ask ourselves what that code should look like so that we know what we're aiming for. There's a relatively small set of opcodes that would allow us to transfer out ETH: `CREATE` , `CALL`, `CALLCODE`, `DELEGATECALL`, `CREATE2` and `SELFDESTRUCT`.
+
+From all these operations `SELFDESTRUCT`  seems to be the best candidate as it only consumes 1 stack element and automatically transfers all ETH, especially useful considering how constrained the compiler is. The precise recipient is irrelevant as our sole win condition is to drain the compiler, making our goal: **have the code reach a `SELFDESTRUCT` opcode with at least 1 element on the stack**.
+
+### JIT - Getting Our Code In 🕳️
+Working backwards we can look at the code generator and see that the only opcodes it directly inserts are: `SWAP`s, `PUSH`s, `MLOAD`, `MSTORE`, `JUMPDEST`, `JUMP`, `JUMPI`, `ADD`, `SUB`, `CALLDATALOAD`, `DUP`s, `SHR` and `LOG0`.
+
+However there is a single section that inserts user defined bytes into the final result. However with heavy restrictions. If the parser doesn't recognize a byte in the program it'll insert it directly into the code, wrapped in invalid opcodes:
+
+```solidity
+// jit.compile isn't actually provided in the challenge, I simply split the invoke method for testing
+jit.compile("+-\xff");
+```
+Results in:
+```
+630000001c80600e6000396000f3 (constructor)
+6000618000                   (contract header, sets up stack)
+5b                           (JUMPDEST, block start)
+80516001018152               ("+")
+8051600190038152             ("-")
+deadffbeef                   (0xff wrapped in invalid opcodes)
+5b00                         (contract footer, JUMPDEST STOP)
+```
+This presents The major issue that whatever opcode we place in the middle is **not reachable**. It can't be reached linearly because of the invalid opcodes in front and it can't be jumped to because the EVM requires a `JUMPDEST` at the location where a jump (`JUMP` / `JUMPI`) lands, meaning we actually need to insert at least 2 bytes somehow:  `5bff` (`JUMPDEST`, `SELFDESTRUCT`).
+
+There are other compiler sections that insert custom bytes but only ever after `PUSH` opcodes meaning they aren't interpreted as their opcodes but as data.
+
+### JIT - Breaking The Wrapper ⛏️
+Note that we can put **any** opcode in the wrapper as long as its byte value doesn't overlap with one of the recognized jit symbols (`[],.<>+-RLAS0#`), we can even insert a `PUSH` opcode into the wrapper. What's interesting about the `PUSH` opcode here is that it's not an isolated opcode, the bytes following a `PUSH` get pushed on the stack, so they're not interpreted as functional opcodes but data.
+
+While this still doesn't allows us to reach the code it does allow us to change the meaning of subsequent code. As an example imagine the following EVM code: 
+```
+INVALID INVALID [SELFDESTRUCT] INVALID INVALID PUSH2 0x5bff
+  de      ad          ff         be      ef     61    5bff
+```
+Now, placing a `PUSH3` in the invalidity wrapper:
+```
+INVALID INVALID PUSH3 0xbeef61 JUMPDEST SELFDESTRUCT
+  de      ad     62     beef61    5b         ff
+```
+The bytes `5bff` that were previously treated as data to be pushed, are all of a sudden malicious code!
+
+Note in the actual JIT compiler we use the `A` / `S` symbols to insert the 2-bytes, which also inserts added opcodes before its `PUSH2` which is why my final solution uses `PUSH5` (`0x64`).
+
+### JIT - Reaching The Wrapper
+We've figured out how to insert some malicious code but now we actually need to jump to it. Looking at the loop finder, block finder and label filler modules they seem quite robust, they only ever insert jump labels that jump between the edges of blocks, which are at the program's square brackets.
+
+Thankfully we can insert a custom jump location by leveraging 3 bugs in the compiler:
+1. The loop linking mapping `loops` is not reset between calls
+2. The block to code position mapping `basicBlockAddrs` is also not reset between calls
+3. Unmatched open-brackets `[` are allowed and do not reset their loop values
+
+Matched square brackets are safe because when they're found their respective links are reset. However for unmatched square brackets the block finder still queries the `loops` mapping allowing us to use values set in previous calls.
+
+### JIT - Tying It All Together 🎁
+Now that we know how to exploit the contract we need to implement the exploit, while it's relatively straight forward once you know how, getting the precise positions right is a bit finicky. 
+
+I started with the final program, inserting some padding `#` to ensure that I had enough space to set the necessary values in prior calls: `[################\x64S\x5b\xff`. I then compiled with JIT to see where the location of the critical `JUMPDEST` was. I then crafted 2 pieces of JIT code one setting the value in the `basicBlockAddrs` mapping and the other in `loops`. It's likely possible to do it in 1 instead of 2 pre-solution programs but for simplicity's sake I just did it in 2 as it was easier.
+
+Despite all the effort the above work condenses down to the following small solution:
+```solidity
+// SPDX-License-Identifier: GPL-3.0-only
+
+pragma solidity ^0.8.13;
+
+import "forge-std/Script.sol";
+
+import {Setup, JIT} from "src/public/contracts/Setup.sol";
+
+contract ExploitJIT is Script { 
+	function setUp() public {} 
+	
+	function run() public { 
+		vm.startBroadcast();
+		Setup s = Setup(vm.envAddress("SETUP_ADDR"));
+		JIT jit = s.TARGET();
+		
+		jit.invoke("[#######################]", "");
+		jit.invoke("########################[]", "");
+		jit.invoke("[################\x64S[\xff", "");
+		
+		vm.stopBroadcast(); 
+	} 
+}
+```
+
+### JIT - Conclusion
+Just-In-Time shows us that simplicity is king and that you should avoid using storage mappings for on the fly calculations. Not only is it vulnerable but it costs a lot of gas!
+
+This challenge also taught me that I should never give up and always look for stupid stuff I missed. I was stuck for several hours because I missed the fact that `JIT` used mappings for certain critical data structures and didn't take precautions to reset them in-between calls. Making a detailed list of assumptions I had and checking them could've helped me discover this sooner.
 
 
 ## Glossary
@@ -236,7 +357,7 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 - ❌ Electric Sheep
 - ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#just-in-time-jit-)
 - ❌ Trapdoooor
-- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-) 🏅 (first blood)
+- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-) 🏅 (I got first blood)
 - ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
 - ❌ Lockbox 2
 - ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)

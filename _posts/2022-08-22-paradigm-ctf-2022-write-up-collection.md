@@ -7,52 +7,15 @@ tags: [solidity, EVM, security, smart contracts]
 ---
 
 
-## Glossary
-The following is a breakdown of the Paradigm CTF 2022 with links to respsective
-write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](https://twitter.com/0xfoobar/status/1561529252029276161) for links to some of the write-ups.
-
-- ✅ Means personally solved (for 0xmonaco just means participated)
-- ❌ Did not solve
-
-**EVM (Solidity) Challenges:**
-
-- ✅ 0xMonaco ([thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
-- ❌ Solidity Underhanded 2022
-- ❌ Fun Reversing Challenge
-- ❌ Stealing Sats
-- ❌ Electric Sheep
-- ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-just-in-time-jit)
-- ❌ Trapdoooor
-- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-hint-finance) 🏅 (first blood)
-- ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
-- ❌ Lockbox 2
-- ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)
-- ✅ Sourcecode 
-- ✅ Merkledrop
-- ✅ Rescue
-- ❌ Random
-
-**Solana Challenges:**
-- ❌ [Solhana 3](https://twitter.com/raggedsec/status/1561514247783256064)
-- ❌ [Solhana 2](https://twitter.com/raggedsec/status/1561514247783256064)
-- ❌ [Solhana 1](https://twitter.com/raggedsec/status/1561514247783256064)
-- ❌ [Otter Swap](https://twitter.com/NotDeGhost/status/1561545438897078273)
-- ❌ [Otter World](https://twitter.com/NotDeGhost/status/1561545438897078273)
-
-**Cairo Challenges:**
-- ❌ Cairo Auction
-- ❌ Cairo Proxy
-- ❌ Riddle Of The Sphinx
-
-
 
 ## Intro
-I participated in the Paradigm CTF 2022 where I was personally able to solve 6 out of the 21 total challenges (see above). I made a few 0xmonaco cars as well, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours.
+I participated in the Paradigm CTF 2022 where I was personally able to solve 7 out of the 13 EVM-related challenges (not counting the PVP game 0xMonaco and external underhanded solidity contest). I made a few 0xMonaco cars as well, but at the end we went with the car my teammates made since I was only able to work on mine for a few hours. I did not attempt or look at any of the Cairo / Solana challenges as I felt that I would not be able to do so much in the 48h provided.
 
 Shout out to my team the [notfellows](https://twitter.com/notfellows)! 😄
+Checkout the [Glossary]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#glossary}) for links to other write-ups.
 
 ### Intro - General EVM Challenge Structure 
-For the 13 EVM related challenges (not counting 0xmonaco, underhanded 2022) the goal was to get the `Setup` contract's `isSolved` method to return `true`  so that the flag could be retrieved from the server. The contracts were deployed to a private chain which was forked off of mainnet. This is an important detail as not all contracts were provided by the CTF, some were just the mainnet contracts which you then had to look at on etherscan.
+For the 13 EVM related challenges (not counting 0xMonaco, underhanded 2022) the goal was to get the `Setup` contract's `isSolved` method to return `true`  so that the flag could be retrieved from the server. The contracts were deployed to a private chain which was forked off of mainnet. This is an important detail as not all contracts were provided by the CTF, some were just the mainnet contracts which you then had to look at on etherscan.
  
 
 ## 🚩 Hint Finance
@@ -252,6 +215,45 @@ The Hint Finance challenge reminds us that we should always be wary of external 
 
 ## 🚩 Just In Time (JIT)
 Write-up coming soon!
+
+
+## Glossary
+The following is a breakdown of the Paradigm CTF 2022 with links to respsective
+write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](https://twitter.com/0xfoobar/status/1561529252029276161) for links to some of the write-ups.
+
+- ✅ Means personally solved (for 0xMonaco just means participated)
+- ❌ Did not solve
+
+**EVM (Solidity) Challenges:**
+
+- ✅ 0xMonaco ([thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
+- ❌ Solidity Underhanded 2022
+- ❌ Fun Reversing Challenge
+- ❌ Stealing Sats
+- ❌ Electric Sheep
+- ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-just-in-time-jit)
+- ❌ Trapdoooor
+- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-hint-finance) 🏅 (first blood)
+- ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
+- ❌ Lockbox 2
+- ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)
+- ✅ Sourcecode 
+- ✅ Merkledrop
+- ✅ Rescue
+- ✅ Random
+
+**Solana Challenges:**
+- ❌ [Solhana 3](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Solhana 2](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Solhana 1](https://twitter.com/raggedsec/status/1561514247783256064)
+- ❌ [Otter Swap](https://twitter.com/NotDeGhost/status/1561545438897078273)
+- ❌ [Otter World](https://twitter.com/NotDeGhost/status/1561545438897078273)
+
+**Cairo Challenges:**
+- ❌ Cairo Auction
+- ❌ Cairo Proxy
+- ❌ Riddle Of The Sphinx
+
 
  
 <br>

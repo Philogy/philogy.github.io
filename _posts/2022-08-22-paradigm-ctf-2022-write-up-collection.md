@@ -234,9 +234,9 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 - ❌ Fun Reversing Challenge
 - ❌ Stealing Sats
 - ❌ Electric Sheep
-- ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-just-in-time-jit)
+- ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#just-in-time-jit-)
 - ❌ Trapdoooor
-- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#-hint-finance) 🏅 (first blood)
+- ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-) 🏅 (first blood)
 - ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
 - ❌ Lockbox 2
 - ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)

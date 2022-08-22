@@ -27,6 +27,8 @@ The famous  last words of many projects.
 
 ### Hint Finance - Intro
 
+Incase you're just looking for the code here's my [**solution script**](https://gist.github.com/Philogy/61534359bbdccb016ebf86b21a0cb8a6).
+
 In the Hint Finance challenge the goal was to drain 3 identical vault contracts of at least 99% of their underlying token. While the vaults were identical, the tokens stored in the vaults were different.
 
 The vault contract was set up as a typical reward contract whereby you deposit some amount of tokens X in return for vault shares which can be redeemed for your tokens X again, along some rewards in several tokens Y. Besides the `deposit` and `withdraw` methods the contracts also had a `flashloan` method allowing you to borrow any token the vault holds.

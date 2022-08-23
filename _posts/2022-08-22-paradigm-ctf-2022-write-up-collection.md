@@ -360,16 +360,16 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 - ❌ Solidity Underhanded 2022
 - ❌ Fun Reversing Challenge
 - ❌ Stealing Sats
-- ❌ Electric Sheep
+- ❌ [Electric Sheep](https://ventral.digital/posts/2022/8/22/paradigm-ctf-2022-electric-sheep)
 - ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#just-in-time-jit-)
 - ❌ Trapdoooor
 - ✅ [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-) 🏅 (I got first blood)
 - ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
-- ❌ Lockbox 2
+- ❌ Lockbox 2 ([Stage 4 & 5](https://twitter.com/brockjelmore/status/1561526932860153856))
 - ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)
 - ✅ Sourcecode 
-- ✅ Merkledrop
-- ✅ Rescue
+- ✅ [Merkledrop](https://jeiwan.net/posts/my-paradigm-ctf-solutions/)
+- ✅ [Rescue](https://jeiwan.net/posts/my-paradigm-ctf-solutions/)
 - ✅ Random
 
 **Solana Challenges:**
@@ -381,11 +381,9 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 
 **Cairo Challenges:**
 - ❌ Cairo Auction
-- ❌ Cairo Proxy
+- ❌ [Cairo Proxy](https://jeiwan.net/posts/my-paradigm-ctf-solutions/)
 - ❌ Riddle Of The Sphinx
 
-
- 
 <br>
 <br>
 

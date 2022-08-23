@@ -356,7 +356,7 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 
 **EVM (Solidity) Challenges:**
 
-- ✅ 0xMonaco ([winning car by 0age](https://twitter.com/z0age/status/1561685707650990084), [thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
+- ✅ 0xMonaco ([meta thread](https://twitter.com/abdulsamijay/status/1561821616778141696), [winning car by 0age](https://twitter.com/z0age/status/1561685707650990084), [thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
 - ❌ Solidity Underhanded 2022
 - ❌ Fun Reversing Challenge
 - ❌ Stealing Sats

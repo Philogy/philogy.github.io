@@ -278,7 +278,7 @@ Results in:
 deadffbeef                   (0xff wrapped in invalid opcodes)
 5b00                         (contract footer, JUMPDEST STOP)
 ```
-This presents The major issue that whatever opcode we place in the middle is **not reachable**. It can't be reached linearly because of the invalid opcodes in front and it can't be jumped to because the EVM requires a `JUMPDEST` at the location where a jump (`JUMP` / `JUMPI`) lands, meaning we actually need to insert at least 2 bytes somehow:  `5bff` (`JUMPDEST`, `SELFDESTRUCT`).
+This presents the major issue that whatever opcode we place in the middle is **not reachable**. It can't be reached linearly because of the invalid opcodes in front and it can't be jumped to because the EVM requires a `JUMPDEST` at the location where a jump (`JUMP` / `JUMPI`) lands, meaning we actually need to insert at least 2 bytes somehow:  `5bff` (`JUMPDEST`, `SELFDESTRUCT`).
 
 There are other compiler sections that insert custom bytes but only ever after `PUSH` opcodes meaning they aren't interpreted as their opcodes but as data.
 

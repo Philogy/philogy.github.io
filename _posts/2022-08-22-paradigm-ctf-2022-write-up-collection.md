@@ -359,7 +359,7 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 - ✅ 0xMonaco ([meta thread](https://twitter.com/abdulsamijay/status/1561821616778141696), [winning car by 0age](https://twitter.com/z0age/status/1561685707650990084), [thread 1](https://twitter.com/sudolabel/status/1561512456291172352))
 - ❌ Solidity Underhanded 2022
 - ❌ Fun Reversing Challenge
-- ❌ Stealing Sats
+- ❌ [Stealing Sats](https://hackmd.io/@theori/r1gnaGNks#Stealing-Sats)
 - ❌ [Electric Sheep](https://ventral.digital/posts/2022/8/22/paradigm-ctf-2022-electric-sheep)
 - ✅ [Just-in-Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#just-in-time-jit-)
 - ❌ Trapdoooor

@@ -21,7 +21,7 @@ timezone: Europe/Berlin
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Philippe's blog                          # the main title
+title: Philogy's blog                          # the main title
 
 tagline: My ideas, research and public journal    # it will display as the sub-title
 
@@ -85,7 +85,7 @@ theme_mode:   # [light|dark]
 img_cdn:
 
 # the avatar on sidebar, support local or CORS resources
-avatar:
+avatar: assets/lasogette0761.png
 
 # boolean type, the global switch for ToC in posts.
 toc: true

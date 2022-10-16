@@ -143,9 +143,6 @@ function flashloan(
     uint256 amount,
     bytes calldata data
 ) external updateReward(address(0)) {
-    emit log_named_address("token", token);
-    emit log_named_uint("amount", amount);
-    emit log_named_bytes("data", data);
     uint256 supplyBefore = totalSupply;
     uint256 balBefore = ERC20Like(token).balanceOf(address(this));
     bool isUnderlyingOrReward = token == underlyingToken ||

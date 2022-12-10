@@ -192,10 +192,6 @@ When received the token is booked on the balance sheet at its cost:
 | Exchange A (Cash) | -1,800.00 USD |
 | Exchange A (ETH) | +1,800.00 USD|
 
-Note that transactions still need to balance in the base currency, regardless of what asset is
-actually being transacted. Furthermore you don't account any gain / loss until it's actually
-realized by selling the asset or somehow else disposing of the asset, this is the so-called
-"realization principle". Now note we still need a way to track the price / cost of non-cash assets
-on our balance sheet. That's where lots come in, in the above example in a separate location you'd
-add a lot.
+Note the main ledger only really cares about postins in the base currency. Purchased assets, their
+price and cost are tracked separately with so-called lots. 1 Lot represents a position / purchase
 

@@ -31,24 +31,18 @@ nerds like me. 😄
 
 
 ## Reasons To Learn Basic Accounting
-Before diving in to the actual content I wanted to lay out some reasons why you might want to learn the basics of accounting if you're not already motivated / interested.
 
-### 🥸 Tax Compliance
-Unless you live in a tax haven you're likely required to accurately report your income and pay taxes. This includes profit from crypto transactions. Considering that centralized institutions like exchanges are cooperating with tax authorities, the transparency of DeFi and the statue of limitations on tax crimes that spans several years, I wouldn't rely on the incompetence of tax authorities for long. If the government is good at one thing it's making sure people pay up.
+Before diving in to the actual content I wanted to lay out some reasons why you might want to learn
+the basics of accounting if you're not already motivated / interested. If you already know why you
+want to learn feel free to skip to the next [section]().
 
-### 😎 Tax Avoidance
-Different than the crime of tax _evasion_, tax **avoidance** is the legal action of carefully
-planning and coordinating your financial activities to minimize your tax burden. Basic accounting
-combined with some basic knowledge about your local tax law can already lead to massive savings.
-I will discuss some basic approaches but it is hard to generalize because every jurisdiction has
-its own laws with its own edge cases.
-
-
-### 📊 Financial Tracking
-Besides understanding your tax burden, accounting will allow you to properly track your finances.
-You'll be able to accurately track your entire networth, see the source and trends of your expenses,
-losses and income. If your goal is to become more wealthy or simply have better security and certainty
-over the state of your finances, accounting will help you with that. 
+- Tax Compliance 🥸: If you want to easily and accurately determine your income you need
+  a consistent system
+- Tax Avoidance 😎: If you want to save on taxes you need to understand your tax laws and how you
+  can legally leverage them to your benefit
+- Insight & Understanding 📊: Accounting allows you to notice and quantify trends in your finances
+  as well as understand how you're spending and earning it, if you want to be able to optimize
+  something you have to be able to measure it first 
 
 ### The Downsides Of An External Accountant
 While you could hire an accountant to do everything for you, unless you have a pretty sizable
@@ -78,30 +72,97 @@ laws and how they might apply to my situation. When it comes time to report my t
 a bunch of summaries from my accounting and hand it over to the tax advisor for them to do the
 reports.
 
-## 📚 Basics: Double-Entry Bookkeeping
+## 🫘 Beancount
 
-Now that we've gotten the "why" out of the way let's get to the "how".
+Beancount is an open-source, easy-to-use text based accounting software. Unlike commercial
+accounting programs it's base feature set is relatively limited. I find this to be very attractive
+as it makes it easy to use without getting distracted by overviews, charts and features I don't
+need.
 
-Accounting is all about tracking financial information. Unlike simple "cash accounting" where only
-cash going in and out is tracked, the more rigorous "double-entry bookkeeping" method allows us to
-easily and accurately track all flow of funds, even when they don't have a direct impact on your
-cash. This is important because as I'll explain later, under most tax codes you're **not only taxed
-when you get cash out**, but when you realize a gain generally.
+While beancount is simple at its core you _can_ choose to make it as sophisticated you want by
+installing and/or writing your own plugins or by simply leveraging the command-line tools that come
+along beancount. Beancount has a very nice API making it easy to extend with Python.
 
-To understand _double-entry bookkeeping / accounting_ let's take a look at the basic concepts
-& components:
+Furthermore as part of its core feature set it has some very nice handling of "inventory" or as it
+prefers to call it in its [documentation](https://beancount.github.io/docs/) commodities. While not
+specifically made for crypto it's very well suited to aid in that.
 
-### The Ledger
+### Installation
 
-The ledger or "books" is where you keep track of your financial activity. Even without a consistent
-system like double-entry bookkeeping the mere act of tracking your activity in one place can already
-be a great way to get an overview of your activity.
+Installing `beancount` is very simple, but it requires you to have Python and its package manager
+`pip` already installed. If you don't have those already I'd recommend just doing a quick search
+"how to install python and pip on (windows / mac / linux)". If you're on a Linux distro, Python and
+pip may already be installed so just check. Once `pip` is installed you can install `beancount` by
+running the following in a command line:
+
+```bash
+pip install beancount # or pip3 install beancount
+```
+
+Next to beancount I'd highly recommend also installing the [`fava` web interface for beancount](https://beancount.github.io/fava/).
+It allows you to have a visual interface in your browser to see your finances and even allows you to
+make basic entries.
+
+### ✏️ Editing Files
+Beancount and the CLI (command line) tools that come installed with it are mainly there to help you
+gain insight and create summaries based on your entries. Beancount entries are tracked in
+`.beancount` files which are created and edited manually, the `.beancount` format is a simple,
+human-readable text format for accounting financial data. For editing such files I'd highly
+recommend using an editor like [VS Code](https://code.visualstudio.com/), while it's typically used
+by programmers note you don't need to know how to code.
+
+If you choose to go with VS Code you should install the Beancount plugin, it'll give you syntax
+highlighting, auto alignment, auto completion and more to make it even easier to manage your
+entries.
+
+![Beancount VS Code Plugin](/assets/images/beancount-vscode-plugin.png)
 
 
-### Transactions
+## 📚 Accounting Basics: Double-Entry Bookkeeping
 
-In double-entry bookkeeping every single event that affects your finances in some persisting manner
-is booked as a transaction, for example:
+Now that we've installed the tool I'll be demonstrating the basic accounting concepts, how they
+relate to crypto / DeFi accounting and how to apply them using beancount.
+
+### 🗒️Your First Ledger
+
+Your "ledger" or "books" is the central store of all your transactions. In beancount it's a set of
+files with the `.beancount` extension. Let's go ahead and create our first ledger, I'll call it
+`Main.beancount` but the name doesn't really matter:
+
+![Beancount VS Code Plugin](/assets/images/beancount-ledger-creation.png)
+
+If you just want to make a small note or remark for yourself you can add a so-called comment by
+prepending the line with semi-colon `;`:
+
+```
+; This is a comment
+; Doesn't matter what I say here beancount won't recognize it and it won't break my file!
+```
+{: file='Main.beancount'}
+
+Next you'll want to specify your base currency, unless you're a DAO which wants to do its accounting
+in a stablecoin or a coin like ETH, BTC or RAI you should pick your local fiat currency. While
+I don't live in the US for the sake of this post I'll go with US-Dollars:
+
+```
+; Define the base currency (remember this is a comment):
+option "operating_currency" "USD"
+```
+{: file='Main.beancount'}
+
+Now that the bare basics are set up you can start `fava` by opening a terminal and running
+`fava Main.beancount` in the folder your ledger is in:
+
+![Fava started in VS Code terminal](/assets/images/beancount-fava-started.png)
+
+You can then go the shown address in your browser to get a visual overview of what you're changing,
+but ignore it for now because you're ledger is empty.
+
+### Transactions & Accounts
+
+In double entry accounting, a transaction is recorded anytime an event persistently changes your
+finances e.g.:
+
 - A cash transfer from one bank account to another
 - Purchase of an item with a credit card
 - Receiving a bill
@@ -109,326 +170,212 @@ is booked as a transaction, for example:
 - Receiving interest
 - Paying a bill you received 2 months ago
 
-In double-entry bookkeeping everything is an **account**. Accounts have balances that increase, decrease
-and even become negative. Every transaction consists of **postings**, each posting affects one
-account:
+The "receiving bill" example may be an unintuitive one, how does "receiving a bill" affect my finances? Well
+when you receive a bill you're being made aware of money you now owe someone. While this post is
+aimed at DeFi accounting these examples are meant to demonstrate what transactions roughly
+represent in the double-entry accounting framework.
 
+Let's add a simple transaction to our ledger denoting a $500 transfer from a "Bank A" to "Bank B":
 
-|Posting|Account|Amount|
-|-----|-----|----|
-|posting 1| Bob's Bank | -500.00 USD|
-|posting 2| Sam's Bank | +500.00 USD|
+```
+2022-12-18 *
+    Assets:Bank-A                              -500.00 USD
+    Assets:Bank-B                               500.00 USD
+```
+{: file='Main.beancount'}
 
-It's called "double-entry bookkeeping" because every transaction needs at least 2 postings and they
-need to balance. The following are **not valid** transactions:
+A transaction in beancount starts with a date in iso format `<year>-<month>-<day>` and a `*`. It's then
+followed by rows of postings, which each posting affecting a specific account. You can also add an
+optional "payee" and "narration" explaining where and what you're doing, they must be in quotes. For example:
 
-|Account|Amount|
-|-----|----|
-| Bob's Bank | -500.00 USD|
+```
+2022-12-18 * "JP Morgan" "Rebalancing to my Chase account"
+    Assets:Bank-A                              -500.00 USD
+    Assets:Bank-B                               500.00 USD
+```
+{: file='Main.beancount'}
 
-|Account|Amount|
-|-----|----|
-| Bob's Bank | -500.00 USD|
-| Sam's Bank | +400.00 USD|
+This will help you later understand what a transaction is and why it was done so it's highly you
+recommended you add it to every transaction, the payee and narration must always be in quotes.
 
-A transaction can have more than 2 postings however, but they **must balance**:
+If you've saved your file and have the VS Code plugin or fava running you'll notice they're
+complaining about errors in your ledger file (note I have relative line numbers on which is why they
+look weird on my end):
+![Fava started in VS Code terminal](/assets/images/beancount-invalid-reference-error.png)
 
-|Account|Amount|
-|-----|----|
-| Bank A | -500.00 USD|
-| Bank B | +350.00 USD|
-| Bank C | +150.00 USD|
+This happens because beancount needs you to define the accounts you're going to use, this
+requirement helps you easily catch typos later. To define an account use the "open" directive, the
+errors should disappear:
+```
+2022-12-18 open Assets:Bank-A
+2022-12-18 open Assets:Bank-B
 
-The fact that transactions must balance is a fundamental property of the double-entry bookkeeping
-system, it ensures that the source and destination of every flow of funds is somehow accounted.
+2022-12-18 * "JP Morgan" "Rebalancing to my Chase account"
+    Assets:Bank-A                              -500.00 USD
+    Assets:Bank-B                               500.00 USD
+```
+{: file='Main.beancount'}
 
-### Accounts
+You can call accounts whatever you'd like, colons `:` in the name are similar to the slashes `/` in
+file paths, they denote "parent" accounts, like folders allowing you to group together related
+accounts:
 
-#### Assets
+```
+2020-12-18 open Assets:Cash:JPM:Savings
+2020-12-18 open Assets:Cash:JPM:Checking
+2020-12-18 open Assets:Cash:BofA
+2021-03-11 open Assets:Crypto:Tokens
+2021-03-11 open Assets:Crypto:Stables
+```
+{: file='Main.beancount'}
 
-As demonstrated in the example transactions above asset accounts are the most straightforward, the
-hold stuff you have. Whether it's cash, crypto or your laptop the things in your posession are
-assets, even if you owe them to someone else.
+```ml
+// running `bean-report Main.beancount accounts | treeify`
+-- Assets
+   |-- Cash
+   |   |-- BofA
+   |   |-- JPM
+   |       |-- Checking
+   |       |-- Savings
+   |-- Crypto
+       |-- Stables
+       |-- Tokens
+```
+{: file='Account Tree'}
 
-#### Expense & Income
+Transactions can have more than two postings however, meaning you can express transactions that
+change more than 1 account:
 
-Considering that all transactions must contain at least 2 postings and that they must balance, how
-does one account for income, don't the funds come from nowhere? What about expenses? Don't funds
-disappear? 🤔
+```
+; Opening (doesn't have to on the same day)
+2022-12-18 open Assets:Cash:Bank-A      
+2022-12-18 open Assets:Cash:Physical    
+2022-12-18 open Expenses:Fees:Bank-A:ATM
 
-Well yes, but no. That's where so-called **expense and income accounts** come in. You see in
-double-entry bookkeeping, accounts are more than bank accounts, they do not simply hold assets,
-instead they are more general. You can imagine them more like trackers / buckets for stats about
-your finances. Asset accounts track the "stuff you have", income "stuff you've earned" and expenses
-"stuff you've given out":
+; Transaction
+2022-12-18 * "Bank A" "ATM Withdrawal"
+    Assets:Cash:Bank-A                       -502.20 USD
+    Assets:Cash:Physical                      500.00 USD
+    Expenses:Fees:Bank-A:ATM                    2.20 USD
+```
+{: file='Main.beancount'}
 
-**You do some freelance work and get wired $1,200.00**
+### 🪨 Balance
 
-|Account|Amount|
-|-----|----|
-| Freelance Income| -1,200.00 USD|
-| Bank A | +1,200.00 USD|
+A core rule of double-entry accounting which is also strictly enforced in beancount is that **all
+transactions must balance**. Specifically they must balance to zero. It's this rule combined with
+the use of different account types that makes double-entry accounting so powerful. It ensures that
+everything is kept track of in some way or another, if you create a transaction that doesn't balance
+beancount will give you an error.
 
-**You withdraw from an exchange paying a $4.12 fee**
+However to make your life easier beancount allows you to omit the value of one posting and will
+balance the transaction for you automatically:
 
-(Not accounting the actual withdrawal)
+```
+; Opening (doesn't have to on the same day)
+2022-12-18 open Assets:Cash:Bank-A      
+2022-12-18 open Assets:Cash:Physical    
+2022-12-18 open Expenses:Fees:Bank-A:ATM
 
-|Account|Amount|
-|-----|----|
-| Exchange A | -4.12 USD|
-| Withdrawal Fees (Expense)| +4.12 USD|
+; Transaction
+2022-12-18 * "Bank A" "ATM Withdrawal"
+    Assets:Cash:Bank-A                       -502.20 USD
+    Assets:Cash:Physical                      500.00 USD
+    Expenses:Fees:Bank-A:ATM
+```
+{: file='Main.beancount'}
 
-**You withdraw $200.00 from Bank A to B, paying a $3.08 fee**
+You can check the filled in values in fava under "Journal" or by running
+`bean-report Main.beancount print` in your command line (`bean-report` is one of the CLI tools
+automatically installed alongside `beancount`).
 
-|Account|Amount|
-|-----|----|
-| Bank A | -200.00 USD|
-| Withdrawal Fees (Expense)| +3.08 USD|
-| Bank B | +196.92 USD|
+### Account Types
 
-Unintuitively this means that income accounts have a negative balance.
+If all transactions must balance then "how do I account for income, expenses, purchases from debt
+or even assets I already had when I started?" you may ask. That's where the different account types
+come in.
 
-#### Liabilities
-Just like expense and income accounts are sort of opposites, liability accounts are the opposite to
-asset accounts. Liabilities are things you owe, future benefits you'll have to give up, like
-a mortgage, credit card or unpaid invoice. Some examples:
+In double-entry accounting accounts are not only where money is (asset accounts) but also where it
+comes from (income accounts), where it went (expense accounts), where it's going to go (liability
+accounts) and where it has come from in the past (equity accounts).
 
-**You take on debt by buying groceries with your credit card**
+These 5 base types: Assets, Income, Expenses, Liabilities and Equity are also enforced by beancount.
+Any valid account name must start with one of these as its root.
 
-|Account|Amount|
-|-----|----|
-| Grocery Expenses | +75.89 USD|
-| Credit Card -XXXX | -75.89 USD|
+#### Assets & Liabilities
 
-**You pay off your credit card at the end of the month also paying off newly accrued interest**
+Assets and liabilities are opposites and the simplest account types. Asset are everything you have
+in your posession, even if you owe to someone and liabilities are everything you owe someone. For
+example when you borrow $10,000.00 worth of coins on a lending protocol you'd book both assets and
+liabilities, because you're both getting the tokens you're borrowing but you're creating debt:
 
-|Account|Amount|
-|-----|----|
-| Cash Bank A | -1211.80 USD |
-| Credit Card -XXXX (liability) | +1186.81 USD |
-| Credit Card Interest (expense) | +124.99 USD |
+```
+; Opening
+2022-01-01 open Assets:Crypto:Tokens
+2022-01-01 open Liabilities:Crypto
 
-**You borrow $250 worth of BTC with margin on Binance** 
+; Transaction
+2022-03-01 * "Aave" "Borrow Tokens"
+    Assets:Crypto:Tokens                   10,000.00 USD
+    Income:Crypto:Interest                -10,000.00 USD
+```
+{: file='Main.beancount'}
 
-|Account|Amount|
-|-----|----|
-| Binance Margin Debt (BTC) | -250.00 USD |
-| Binance Margin Assets (BTC) | +250.00 USD |
+#### Expenses & Income
+Counterintuitively income accounts have a negative balance, this is because they're a source of
+funds, meaning they're deducted when used. If you do a lot of transactions with different DeFi
+protocols, maybe even some freelance work and/or have a fixed job, having a good breakdown of income
+types by keeping track of corresponding income accounts can give you a good overview of how you made
+your money. Similarly expense accounts give you insight into how your money is spent.
+
+Here are two examples:
+
+```
+; Opening
+2022-01-01 open Assets:Crypto:Tokens
+2022-01-01 open Assets:Cash:Bank-A
+2022-01-01 open Income:Crypto:Interest
+2022-01-01 open Income:Freelance:Consulting
+2022-01-01 open Expenses:Fees:Stripe
+
+; Transactions
+2022-03-01 * "Aave" "Withdraw Interst"
+    Assets:Crypto:Tokens                       30.00 USD
+    Income:Crypto:Interest                    -30.00 USD
+
+2022-03-01 * "Bob" "Payment for February"
+    Income:Freelance:Consulting            -3,000.00 USD
+    Assets:Cash:Bank-A                      2,972.23 USD
+    Expenses:Fees:Stripe
+```
+{: file='Main.beancount'}
 
 #### Equity
-The final, and possibly strangest account class is equity. Equity represents the "leftover" in your
-accounting. If you took the base value of everything you have and paid of all your debts
-(liabilities) equity is what you'd be left with.
+Equity accounts are the weirdest account type, they basically represent what you'd have left over if
+you took all your assets and paid off your debts. They're mainly used when you start a new ledger or
+"close a time period". In accounting "closing" a time period basically means reseting the income
+& expense accounts and moving any net profit / loss into equity:
 
-Luckily you typically don't have to worry about equity accounts too much, in personal accounting you
-only touch them at the start for your opening balances and the end of a quarter / year to book
-income and expenses into. The process of moving income and expense balances into equity is called
-"closing".
-
-Some examples:
-
-**You start a new ledger accounting $4,200.23 cash and NFTs you bought at a cost of $1,200.69**
-
-|Account|Amount|
-|-----|----|
-| Cash at Bank A | +4,200.23 USD |
-| NFTs | +1,200.69 USD |
-| Opening Balances (Equity) | -5400.92 USD|
-
-**You close your income and expenses accounts for the year, booking a net profit of $940.92**
-
-|Account|Amount|
-|-----|----|
-| Crypto Capital Gains | +1,181.03 USD |
-| Transaction Fees | -240.11 USD |
-| Retained Capital Gains (Equity) | -940.92 USD|
-
-### Balance Sheet
-
-Your balance sheet
-
-## 🪙 Inventory, Lots and Booking Methods
-
-### Inventory & Lots
-Now that we've covered the absolute basics we can get into the juicy stuff, accounting crypto
-assets, more generally referred to as inventory. While I'll be talking about crypto specifically the
-principles apply to other forms of inventory such stocks, real estate, collectibles, domains etc.
-
-Since accounting is typical done in some fiat base currency e.g. USD or EUR, we need some extended
-system to track and manage other assets we may own such as crypto. When you acquire a token it'll be
-at some price and cost. When received the token is booked on the balance sheet at its cost: 
-
-**You buy 1.5 ETH on an exchange on the 15. of March 2022, at a price of 2,580.00 USD**
-
-|Account|Amount|
-|-----|----|
-| Exchange A (Cash) | -3,870.00 USD |
-| Exchange A (ETH) | +3,870.00 USD|
-
-Note the main ledger only really cares about postings in the base currency. Purchased assets, their
-price and cost are tracked separately with so-called lots. One lot represents a position / purchase,
-for the transaction above, in a separate part of our ledger we could add a lot in our assets
-inventory:
-
-|Date|Asset|Units|Price|Cost|
-|----|-----|-----|-----|----|
-|2022-03-15| ETH | 1.5 | +2,580.00 USD | +3,870.00 USD |
-
-**Later on the 18. October you buy another 0.8 ETH at a price of 1,330.70 USD / ETH**
-
-Transaction:
-
-|Account|Amount|
-|-----|----|
-| Exchange A (Cash) | -1,064.56 USD |
-| Exchange A (ETH) | +1,064.56 USD |
-
-Inventory after transaction:
-
-|Date|Asset|Units|Price|Cost|
-|----|-----|-----|-----|----|
-|2022-03-15| ETH | 1.5 | 2,580.00 USD | +3,870.00 USD |
-|2022-10-18| ETH | 0.8 | 1,330.70 USD | +1,064.56 USD |
-
-What if you were to sell 1.0 ETH now, which lots would you book from? This is an important question
-because depending on which lots you deduct from you'll have a different realized gain / loss. You
-see in double-entry bookkeeping we don't actually track our unrealized "paper" gains / losses, you
-only track your realized gains, this is called the "realization principle" of accounting. This is
-done not only because it's more practical but because most tax codes only require you to report and
-tax realized gains and losses.
-
-The difference between the value you acquired the asset for, your "cost basis" and the value you're
-disposing "selling" it for is the realized gain or loss. If the price were 3,000.00 USD / ETH and
-you sold 1.0 and you only booked from the older March lot you'd only have a gain of 420.00 USD vs.
-1,419.44 USD if you booked 0.8 from the December lot and 0.2 from the March lot.
-
-### Booking Methods
-
-Choosing what lots to book from or expressed more simply "which coins are sold" in a given sale
-depends on your tax laws, some countries give you more freedom to choose and some less. There can
-also be differences between what booking rules private individual vs. corporations can use.
-
-For the following rules I'll be using the following inventory (not real prices) as the example:
-
-|Date|Asset|Units|Price|Cost|
-|----|-----|-----|-----|----|
-|2022-03-01| ETH | 1.5 | 2,000.00 USD | +3,000.00 USD |
-|2022-06-01| ETH | 1.5 | 3,000.00 USD | +4,500.00 USD |
-|2022-09-01| ETH | 1.5 | 1,500.00 USD | +2,250.00 USD |
-|2022-11-01| ETH | 1.0 | 1,000.00 USD | +1,000.00 USD |
-
-
-#### FIFO (First In First Out)
-
-A quite common rule, applicable in both the US and Germany for example, dictates that when you sell
-coins you must choose the "first" i.e. oldest coins. In our example above this would mean the March
-lot. Under this rule the sale of 2.0 ETH at a price of 2,500.00 USD would in a 500.00 USD gain:
-
-> This calculation is just meant as an illustration, once you start using software it'll be taken
-> care of automatically. Regardless the calculation is quite simple, consisting of some
-> multiplication, addition and subtraction.
-{: .prompt-info}
-
-|Lot Date|Price|Lot Units Reduced|Units Left|Lot Gain|Net Gain|
-|----|----|-----|------|-----|----|
-||2,500.00 USD||2.0 ETH||0.00 USD|
-|2022-03-01|2,000.00 USD|1.5 ETH|0.5 ETH|+750.00 USD|+750.00 USD|
-|2022-03-01|3,000.00 USD|0.5 ETH|0.0 ETH|-250.00 USD|+500.00 USD|
-
-After a 2.0 ETH sale under FIFO our inventory would look like this:
-
-|Date|Asset|Units|Price|Cost|
-|----|-----|-----|-----|----|
-|2022-06-01| ETH | 1.0 | 3,000.00 USD | +4,500.00 USD |
-|2022-09-01| ETH | 1.5 | 1,500.00 USD | +2,250.00 USD |
-|2022-11-01| ETH | 1.0 | 1,000.00 USD | +1,000.00 USD |
-
-#### LIFO (Last In First Out)
-
-Similar to the FIFO method, in LIFO the newest coins are sold first. 
-
-#### HIFO (Highest In First Out)
-
-The "highest in first out" method is more or less the most advantageous option. It requires you to
-book from the most expensive lots first, minimizing gains and maximizing your losses. From some
-basic research[^1] it looks like you can actually apply this rule if you're filing in the US and
-fully tracking your inventory.
-
-#### Exotic Methods
-There are some more rarer methods you may be able to use in certain countries like "average cost
-booking" but I haven't found much detail on where and when you can use such methods. In general
-there could be many conceivable booking methods but ideally you should use the one that's actually
-valid for filing your taxes so that you have an accurate overview of what your taxable gain might
-actually look like.
-
-#### Universal vs. Per Account Tracking
-Depending on your countries' rules you may have to track your inventory on a universal vs. account
-basis. Account / Per Wallet application means that every separate account would have its own
-inventory and order, however this could quickly become infeasible if you start transferring assets
-between accounts which is why for crypto universal tracking is much more practical. When you track
-your inventory "universally" it just means you have one inventory and queue per asset regardless
-where you transfer or hold the assets.
-
-#### Cost Basis And Booking When Shorting
-
-If you're shorting crypto by actually borrowing cryptocurrencies / tokens on margin exchanges or
-lending platforms you need to track a separate "negative inventory" for your liabilities. This will
-allow you to calculate the profit and loss of your short trades. An example:
-
-1. **You borrow 10,000 UST from Aave at a price 0.93 USD / UST and sell it for USDC:**
-
-Transactions:
-
-|Account|Amount|
-|-----|----|
-| UST Liabilities | -9,300.00 USD |
-| USDC Assets | +9,300.00 USD |
-
-UST Liabilities Inventory:
-
-|Date|Asset|Units|Price|Cost|
-|----|-----|-----|-----|----|
-|2022-05-11| UST | -10,000.00 | 0.93 USD | -9,300.00 USD |
-
-**You sell your USDC back for the UST at 0.06 USD / UST and repay your loan (assuming no
-interest):**
-
-|Account|Amount|
-|-----|----|
-| USDC Assets | -558.00 USD |
-| Shorting Gains (Income) | -8,742.00 USD |
-| UST Liabilities | +9,300.00 USD |
-
-You'll notice that despite the price being down to $0.06 / UST, $9,300.00 is still booked to the UST
-liabilities account because that was the "cost basis" for the loan.
-
-## Putting it in Practice: Beancount
-
-Before I show you more examples of how to book more exotic transactions I want to show you this very
-basic, free and open-source accounting tool called `beancount`. It's very simple, taking only
-a text-file ledger as input and allowing you to generate different reports and insights. It's mainly
-a command-line based tool so it's well suited for developers but it doesn't require any programming
-knowledge unless you want to extend it with custom plugins or write your own querries.
-
-### Installation
-
-Installing `beancount` is very simple, but it requires you to have Python and its package manager
-`pip` already installed. If you don't have those already I'd recommend just doing a quick search
-"how to install python and pip on (windows / mac / linux)". If you're on Linux Python and pip may
-already be installed so just check. Once `pip` is installed you can install `beancount` by running
-the following in a command line:
-
-```bash
-pip install beancount # or pip3 install beancount
 ```
+; Opening
+2022-01-01 open Equity:Opening-Balances
+2022-01-01 open Assets:Cash:Bank-A
+2022-01-01 open Income:Crypto:Interest
+2022-01-01 open Income:Freelance:Consulting
+2022-01-01 open Expenses:Fees:Stripe
 
-Next to beancount I'd highly recommend also installing the [`fava` web interface for beancount](https://beancount.github.io/fava/).
-It allows you to have a visual interface in your browser to see
+; Transactions
+2022-01-01 * "Opening balances"
+  
 
-### Base Currency
+; inbetween transactions
 
-Note that while the examples for the rest of this post will use US-Dollars ($ / USD) as a base
-currency you can do your accounting in any base currency you'd like, whether it be Euros, Indian
-Rupees, Canadian Dollars or even cryptocurrencies like BTC / ETH.
+2022-03-01 * "Bob" "Payment for February"
+    Income:Freelance:Consulting            -3,000.00 USD
+    Assets:Cash:Bank-A                      2,972.23 USD
+    Expenses:Fees:Stripe
+```
+{: file='Main.beancount'}
 
-[^1]: [CNBC - This rarely used tax loophole is helping some bitcoin holders save tons of cash](https://www.cnbc.com/2022/01/15/bitcoin-tax-loophole-how-hifo-accounting-reduces-irs-bill.html)
+Equity in total should be negative, if it's positive it means you owe more than you have
+(Liabilities > Assets) and are theoretically insolvent.

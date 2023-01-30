@@ -1,6 +1,6 @@
 ---
-title: "Beancount: Easy DeFi Accounting For Noobs (Part 1)"
-categories: [accounting]
+title: "[DRAFT] Beancount: DeFi Accounting For Noobs"
+categories: [drafts]
 tags: [DeFi, accounting, beancount]
 
 ---
@@ -8,9 +8,13 @@ tags: [DeFi, accounting, beancount]
 
 > **Disclaimer**
 >
-> I'm neither a professional accountant, tax advisor or lawyer. The content of this post is meant to
-> be educational and should not be considered as professional advice of any kind. It is recommended
-> you consult a professional before applying any tax strategies discussed herein.
+> While it should be common sense, just in someone doesn't understand this: you **should not** blindly listen to a post on
+> the internet on how do pay your taxes, do accounting or even trade for that matter. Doing any of
+> those actions wrong may result in you harming your finances and/or becoming legally liable if you
+> e.g. misstate your income on tax forms. I'm neither a professional accountant, tax advisor or
+> lawyer. The content of this post is meant to be educational and should not be considered as
+> professional advice of any kind. If you intend to apply anything from this post do so at your own
+> risk and consult a professional as this post almost definitely contains errors and oversimplifications.
 {: .prompt-warning}
 
 ## Intro
@@ -34,6 +38,9 @@ want to learn feel free to skip to the next [section]().
 - Insight & Understanding 📊: Accounting allows you to notice and quantify trends in your finances
   as well as understand how you're spending and earning it, if you want to be able to optimize
   something you have to be able to measure it first 
+- Unique mental model 🧠: If you're a DeFi smart contract developer or auditor understanding the basics of
+  financial accounting can give you a unqiue way of modeling value changes and transactions in
+  protocols, adding another useful mental model to apply to protocols.
 
 ### The Downsides Of An External Accountant
 While you could hire an accountant to do everything for you, unless you have a pretty sizable
@@ -60,21 +67,21 @@ by automating the importing and classification of transactions.
 
 My personal approach is to do the accounting myself while consulting a tax advisor on the general
 laws and how they might apply to my situation. When it comes time to report my taxes I also compile
-a bunch of summaries from my accounting and hand it over to the tax advisor for them to do the
-reports.
+a bunch of summaries from my accounting and hand it over to the tax advisor for them to double-check
+and submit the necessary tax statements in a propper manner.
 
 ## 🫘 Beancount
 
-Beancount is an open-source, easy-to-use text based accounting software. Unlike commercial
-accounting programs it's base feature set is relatively limited. I find this to be very attractive
-as it makes it easy to use without getting distracted by overviews, charts and features I don't
-need.
+Beancount is an open-source, easy-to-use text based accounting tool. Unlike commercial
+accounting programs it's base feature set is relatively limited. While this may sound like
+a downside I think this is actually very useful as it makes it easy to use without getting distracted
+by overviews, charts and features I don't need.
 
 While beancount is simple at its core you _can_ choose to make it as sophisticated you want by
 installing and/or writing your own plugins or by simply leveraging the command-line tools that come
 along with beancount. Beancount has a very nice API making it easy to extend with Python.
 
-Furthermore as part of its core feature set it has some very nice handling of inventor" or as it
+Furthermore as part of its core feature set it has some very nice handling of inventory or as it
 prefers to call it in its [documentation](https://beancount.github.io/docs/) "commodities". While
 not specifically made for crypto it's very well suited for accounting crypto transactions.
 
@@ -315,6 +322,7 @@ liabilities, because you're both getting the tokens you're borrowing but you're 
 {: file='Main.beancount'}
 
 Similarly if you make a purchase from a credit card:
+
 ```
 ; Opening
 2022-01-01 open Liabilities:Credit-Cards:Mastercard-6969
@@ -911,9 +919,9 @@ booking a potentially separate loss / gain:
 
 2022-12-04 open Income:Crypto:LP
 2022-12-04 * "Sushiswap" "Withdraw liquidity withdrawal"
-    Assets:Crypto:LP                         -629.37 SUSHI-LP {"DAI-ETH"}
-    Assets:Temp                                -4.324 USD
-    Assets:Crypto:Tokens                    3,400.00 DAI {1.00 USD}
+    Assets:Crypto:LP                         -629.3700 SUSHI-LP {"DAI-ETH"}
+    Assets:Temp                                -4.3240 USD
+    Assets:Crypto:Tokens                    3,400.0000 DAI {1.00 USD}
     Assets:Crypto:Tokens                        2.7375 ETH {1,242.161 USD}
     Income:Crypto:LP
 ```
@@ -921,9 +929,284 @@ booking a potentially separate loss / gain:
 
 Note that I split the single transaction (LP withdrawal) over two entries so that I can leverage
 beancount's auto-balance feature to calculate the P/L on the ETH and the LP tokens, furthermore for
-the sake of simplicity I'm not following my own rule of including the fee in the cost of the output
-for the ake of simplicity.
+the sake of simplicity I'm not following my own rule of including the fee in the cost of the output.
+
+### 📉 Margin & Shorting
+
+
+> Before proceeding with this section where I show you how I'd account margin & shorting
+> related transactions I'd recommend you pause here, and as an exercise try to record your own or
+> example transactions in beancount or on paper (opening a short, closing, liquidation). Break it down
+> step by step, what am I putting into this transaction, what am I getting out? What cost basis is
+> associated? Do my transactions balance and have I forgotten to book income / expenses?
+{: .prompt-info}
+
+Here I'll talk mainly about margin, leverage and shorting in the sense where you're actually
+borrowing assets to some degree. If you're leveraged derivatives such as Perps or Inverse tokens
+that don't directly require debt on your part you can use the approaches described above to account
+for your transactions.
+
+#### Borrowing USD
+
+The first step when leverage trading or shorting is borrowing. Borrowing allows you to basically
+"play with someone else's money" paying them back once your trade was successful or degraded to the
+point where the funds are called back, typically in a process called "liquidation".
+
+Thinking of the basics borrowing has two sides: you get something (book to assets) and you create an
+obligation to pay something back (book to liabilities):
+
+```
+2023-01-01 * "Exchange-A" "Borrow 1,000 USD to margin trade"
+  Liabilities:Margin:Exchange-A     -1,000.00 USD
+  Assets:Cash:Exchange-A             1,000.00 USD
+
+```
+{: file='Main.beancount'}
+
+Now if you trade with those borrowed assets you can book them as normal, buying and selling
+different cryptos, tracking the cost basis etc. 
+
+#### Repaying USD
+
+Similar to the borrow transaction you simply book the same accounts but in reverse, adding
+a positive amount to your liabilities and deducting from your asset accounts. To account for
+interest you simply book an "interest expense" account:
+
+```
+2023-01-01 * "Exchange-A" "Borrow 1,000 USD to margin trade"
+  Assets:Cash:Exchange-A                -1,003.00 USD
+  Liabilities:Margin:Exchange-A          1,000.00 USD
+  Expenses:Interest:Margin:Exchange-A        3.00 USD
+
+```
+{: file='Main.beancount'}
+
+#### Borrowing Non-Base Currency Assets
+
+If you short crypto the old school way or are just borrowing a foreign stable coin on
+a decentralized lending protocol you'll have to account your liabilities slightly differently. Since
+your core ledger is tracked in another asset you may actually realize a loss / gain once you repay
+your debt because of a difference in price. Let's you were shorting LUNA and you borrowed and sold
+1,000 LUNA at a price of 100 USD / LUNA and you later bought it back and repaid that debt after it
+dropped to 80 USD, that'd be a gain of 20 USD / LUNA that you have to somehow account. This can
+achieved by also tracking the "cost basis" of your debt this is nearly identical to what you would
+do for assets although a bit more counterintuitive. The "cost basis" is not the value you spent to
+acquire the debt but instead the value of the debt when it was created:
+
+```
+2022-06-01 open Liabilities:Crypto:Exchange-A "FIFO"
+2022-06-01 open Assets:Crypto:Exchange-A "FIFO"
+2022-06-01 open Expenses:Crypto:Trading-Fees:Exchange-A
+
+2022-06-01 * "Exchange-A" "Borrow LUNA for short"
+  Liabilities:Crypto:Exchange-A     -1,000.00 LUNA {100.00 USD}
+  Assets:Crypto:Exchange-A           1,000.00 LUNA {100.00 USD}
+
+2022-06-01 * "Exchange-A" "Sell borrowed LUNA"
+  Assets:Crypto:Exchange-A                    -1,000.00 LUNA {}
+  Assets:Cash:Exchange-A                      99,987.00 USD
+  Expenses:Crypto:Trading-Fees:Exchange-A         13.00 USD
+
+```
+{: file='Main.beancount'}
+
+Note that liability accounts that track non-base currency assets also need a booking rule as you may
+be borrowing in several batches over time at different prices and need to know how to account the
+value change of your debt.
+
+#### Repaying Crypto
+
+Closing the LUNA short from above you'd book at 80 USD a transactions as follows:
+
+```
+2022-07-01 * "Exchange-A" "Buy Back LUNA"
+  Assets:Cash:Exchange-A                     -80,087.00 USD
+  Assets:Crypto:Exchange-A                     1,001.00 LUNA {80.00 USD}
+  Expenses:Crypto:Trading-Fees:Exchange-A          7.00 USD
+
+2022-07-01 * "Exchange-A" "Repay LUNA loan + 1 LUNA of interest"
+  Assets:Crypto:Exchange-A             -1,001.00 LUNA {}
+  Liabilities:Crypto:Exchange-A         1,000.00 LUNA {}
+  Income:Crypto:Debt-PnL              -20,000.00 USD
+  Expenses:Interest:Margin:Exchange-A      80.00 USD // Value of 1 LUNA of interest just bought added to expenses
+```
+{: file='Main.beancount'}
+
+#### Liquidation
+
+Liquidation is nearly identical to repayment except you may have to pay a liquidation penalty on top
+of the value of the now increased debt, realizing both a loss because of the appreciation of your
+liability and expense in the form of the liquidation penalty:
+
+```
+; Alternative Universe where LUNA went to 200 USD
+
+2022-07-01 * "Exchange-A" "Liquidation at 200 USD / LUNA + 5% penatly and 4 LUNA interest"
+  Assets:Cash:Exchange-A             -210,800.00 USD
+  Liabilities:Crypto:Exchange-A         1,000.00 LUNA {}
+  Expenses:Interest:Margin:Exchange-A     800.00 USD
+  Income:Crypto:Debt-PnL              100,000.00 USD
+  ; 5% on the 200k worth of LUNA debt
+  Expenses:Liquidation:Exchange-A      10,000.00 USD
+
+```
+{: file='Main.beancount'}
+
+## Basic Tax Optimization
+
+Now that we have the tools and some examples to account basically any crypto transaction let's go
+through some tax tips that should apply to most jurisidictions. However before we dive in I'd refer
+you to the disclaimer and consulting professionals sections again, this is not tax / legal advice
+but merely educational examples of tax strategies that may or **may not** work or even be legal
+depending on where you live and file your taxes. There can be very subtle but important differences between
+countries based on your precise circumstances. Furthermore professional tax advisors and accountants
+should be able to advise on other strategies that are better or actually suited to your
+circumstances.
+
+### HODL & Borrow
+
+Unless your country has some type of wealth / property tax on merely having valuable assets only
+_realized_ gains are taxed. What this means is that if you buy a coin and it e.g. goes up 1000x over
+time turning your $ 10,000 investment into $ 10M  that $ 9.99M won't actually be taxable until you
+sell those coins for another or fiat. 
+
+> Don't try to avoid paying taxes by selling your coins for other coins, or spending the tokens
+> directly on goods or services via e.g. a crypto card because most jurisidictions count any
+> disposal as a realization of your gains. Meaning if you pay e.g. for a watch that costs 15k with
+> coins you purchased at a value of 1.5k you'll owe the government taxes on the 13.5k realized gain.
+{: .prompt-warning}
+
+So great, you have coins that have gone up in value but you can't / don't want to sell them to avoid
+taxes, what's the point of having those juicy gains if you can't spend them, right? Well that's
+where the second part comes in. Instead of selling to access the value of your assets you can borrow
+against them, either on exchanges in the form of margin loans, lending protocols or even directly
+with people OTC depending on the asset and what the amount you're borrowing against is. In most
+jurisidictions this doesn't count as a sale because you technically still own the asset, you've just
+deposited it somewhere as collateral, as long as you pay the interest and don't default on the loan
+you don't realize a gain. In fact if you have good collateral you may never have to directly repay
+the loan as you could continue to refinance as the value of your asset appreciates.
+
+**Example:**
+
+You have 1,000.00 ETH you bought back in the day for $ 20 a piece and you want to get yourself a nice car for
+$ 60k. Instead of selling that ETH you go to an institution or lending platform and deposit the
+more than $ 1M worth of ETH as collateral, borrowing $ 60k against it. Not only will you not
+realize a gain (again depends on your jurisidiction) the interest on that loan is likely very low and
+definitely much lower than any consumer credit card debt. A win-win.
+
+### Long-term vs. Short-term Gains
+
+Extending the HODL & borrow strategy you can also save a lot in taxes by being aware of your
+long-term vs. short-term profit taxes. You see most jurisidictions have a different tax rate for
+profits that are made from assets that were held for shorter periods and profits from assets that
+were held for longer, this is meant to discourage speculation. In Germany for example, short-term
+gains from crypto held less than 1 year are taxed at your personal income tax rate which very
+easily reaches 42%. However if you hold your crypto for more than a year any gains are completely
+tax free (doesn't apply to all coins though and only for private individuals not companies). The US
+seems to have a similar rule whereby short-term crypto sales count as a "short-term capital gain"
+and long-term sales count as "long-term capital gain".[^3]
+
+This is why systematically tracking your crypto transactions can be very useful so that you can more
+easily know whether you can decrease your tax burden by simply waiting a bit longer before selling.
+
+### Tax Loss Harvesting
+
+Tax loss harvesting is strategy whereby you strategically sell positions at a loss to offset your
+net gain for a year and reducing your tax burden. This can be the silver lining in the those shitty
+NFT and dog coin purchases, they could at least allow you to reduce your taxable gain. Selling
+earlier at a loss is also useful because jurisidictions that differentiate between long-term and
+short-term gains usually do the same for losses whereby long-term losses are only deductible from
+long-term gains and short-term losses from short-term gains.
+
+**Example:**
+
+It's 2022 and the tax year is ending in 1 month, throughout the year I realized $ 5,000.00 of
+short-term gains taxed at 30% and $ 3,000.00 of long-term gains taxed at 10%. The cutoff for
+long-term / short-term is 1 year. I also still hold an NFT that rugpulled right after launch almost
+a year back, 350 days. At the time I bought the NFT I aped in with ETH that was at the time worth
+$ 2,000.00. Now there's no trading volume, no active bids, the project is basically dead, meaning
+a current value of 0$ or a realized loss of $ 2,000.00 if I were to sell it.
+
+If I don't sell the NFT I'd have to pay `5000 x 30% + 3000 * 10%` = $ 1,800.00 in taxes. If I wait
+too long to sell the NFT until it's been a year since the original aquisition it'll only count against my
+long-term gains meaning I'd pay `5000 x 30% + (3000 - 2000) * 10%` = $ 1,600.00 in taxes. $ 200.00
+In savings are good but it could be even better. If I sell the NFT immediately it would just still
+count to my short-term gains, reducing my tax burden to `(5000 - 2000) x 30% + 3000 * 10%`
+= $ 1,200.00, $ 600.00 in savings!
+
+Beyond simply reducing your tax burden you can also lower the cost basis of the asset if you wish to
+keep it by selling and then re-buying it at a similar price, as this will realize a loss and lower
+your cost basis because you bought back in at a lower price. Done right this can move losses into
+your short-term gains and move the future gain to your long-term side.
+
+> Some jurisidictions have rules that prevent you from legally accounting losses if you replaces the asset
+> i.e. buy back-in shortly after you sold it so it is highly advised you do some research before
+> doing this. The US for example has a rule that prevents this called the "wash sale" rule that
+> prevents you from accounting losses for securities such as stocks and bonds that you buy back in
+> less than 30 days.
+{: .prompt-warning}
+
+
+### Trading LLC
+
+> Just create an LLC bro
+
+As I briefly touched on before depending on your tax code different types of income may have to be
+accounted and taxed differently. What this can for example mean is that if you're a freelancer getting
+paid in crypto the value upon receival may be taxed as normal income while a realized loss from the
+coin itself may only count as capital gains, the may not be able to deduct the one from the other.
+
+This is where a "Trading LLC" comes in. In case you didn't know in almost all jurisidictions of
+the world buisnesses and individuals are taxed differently and have different accounting rules that
+apply to them. However you don't have to have a "real company" to be able to take advantage of the
+differences in rules. In most capitalist countries it's relatively easy and not that expensive for anyone
+to create a buisness entity. A buisness entity is a "virtual" legal person separate from yourself as a private
+individual but controlled by you. Almost how a smart contract is different to an EOA / user wallet.
+A company is an imaginary concept, it's a "legal ritual" that has to be enacted by you, typically
+together with a lawyer or notary that allow to create a new "person" in the legal system. It's less
+complicated than it sounds but there are several trade-offs to consider before creating one solely
+for the purposes of trading:
+
+**Reporting requirements & overhead**
+
+Unlike your personal income statement filing for a company is usually more complex and expensive than
+just for yourself as it's typically always done by a professional. This may not always be the case,
+in some countries it may easier to file taxes for a company than it is to do so privately
+
+**Laws & compliance**
+
+Trading as a company may require you to get additional licenses from regulatory bodies if it's a
+"protected" or "reserved" activity in your country.
+
+**Finacial separation**
+
+While there are exceptions, buisness entities are typically separate _persons_ with separate finances
+under the law so you can't just freely transfer assets back and forth without certain tax or even legal implications.
+
+For example, while a buisness entity may allow you to deduct gains and losses from different income
+streams going into the business from one another, any profits are "stuck" in the company. Legally
+taking money out of your business may require you to issue a dividend or salary which will be taxed as
+capital gains or normal income, meaning you may end up paying more taxes (corporate tax + capital gains / income tax)
+than you if you were to just directly trade as private individual.
+
+**KYC**
+
+Trading on exchanges and other KYC'ed platforms will also require you to do a separate registration,
+even more overhead.
+
+
+## Final Thoughts
+
+While none of us want to pay our taxes the penalty for not doing so or doing so incorrectly can be
+quite severe. Understanding the basics of financial accounting and your local tax code will allow you
+to not only pay your taxes and sleep well at night but also give you better insight into your
+finances and finance in general.
+
+I hope I was able to present the stereotypically boring subject of accounting and taxation in an
+engaging and valuable way. If you have any feedback or want to stay updated future finance / smart
+contract content you DM / follow me on [Twitter](https://twitter.com/real_philogy).
 
 
 [^1]: [Token Tax -  Accounting methods](https://tokentax.co/blog/crypto-accounting-methods)
 [^2]: [Forbes - Article on crypto booking methods](https://www.forbes.com/sites/shehanchandrasekera/2020/09/17/what-crypto-taxpayers-need-to-know-about-fifo-lifo-hifo-specific-id)
+[^3]: [Investopedia Long-Term vs. Short-Term Capital Gains](https://www.investopedia.com/articles/personal-finance/101515/comparing-longterm-vs-shortterm-capital-gain-tax-rates.asp)

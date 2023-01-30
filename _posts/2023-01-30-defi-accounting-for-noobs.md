@@ -1,9 +1,17 @@
 ---
 title: "[DRAFT] Beancount: DeFi Accounting For Noobs"
+date: 2023-01-30 21:52
 categories: [drafts]
 tags: [DeFi, accounting, beancount]
 
 ---
+
+> **Public Draft Status**
+>
+> Note that this post is a public draft and may still be rough around the edges. Feel free to
+> privately DM me any feedback on Twitter. 
+{: .prompt-info}
+
 
 
 > **Disclaimer**
@@ -29,7 +37,7 @@ nerds like me. 😄
 
 Before diving in to the actual content I wanted to lay out some reasons why you might want to learn
 the basics of accounting if you're not already motivated / interested. If you already know why you
-want to learn feel free to skip to the next [section]().
+want to learn feel free to skip to the next [section]({% post_url 2023-01-30-defi-accounting-for-noobs %}#-crypto-tax-software--when-to-get-help-from-experts).
 
 - Tax Compliance 🥸: If you want to easily and accurately determine your income you need
   a consistent system

@@ -16,7 +16,7 @@ tags: [DeFi, accounting, beancount]
 
 > **Disclaimer**
 >
-> While it should be common sense, just in someone doesn't understand this: you **should not** blindly listen to a post on
+> While it should be common sense, just in case someone doesn't understand this: you **should not** blindly listen to a post on
 > the internet on how do pay your taxes, do accounting or even trade for that matter. Doing any of
 > those actions wrong may result in you harming your finances and/or becoming legally liable if you
 > e.g. misstate your income on tax forms. I'm neither a professional accountant, tax advisor or

@@ -17,10 +17,10 @@ tags: [DeFi, accounting, beancount]
 > **Disclaimer**
 >
 > While it should be common sense, just in case someone doesn't understand this: you **should not** blindly listen to a post on
-> the internet on how do pay your taxes, do accounting or even trade for that matter. Doing any of
+> the internet on how to pay your taxes, do accounting, or even trade for that matter. Doing any of
 > those actions wrong may result in you harming your finances and/or becoming legally liable if you
-> e.g. misstate your income on tax forms. I'm neither a professional accountant, tax advisor or
-> lawyer. The content of this post is meant to be educational and should not be considered as
+> e.g. misstate your income on tax forms. I'm neither a professional accountant, tax advisor nor
+> lawyer. The content of this post is meant to be educational and should not be considered
 > professional advice of any kind. If you intend to apply anything from this post do so at your own
 > risk and consult a professional as this post almost definitely contains errors and oversimplifications.
 {: .prompt-warning}
@@ -29,13 +29,12 @@ tags: [DeFi, accounting, beancount]
 This blog post will give you a practical introduction to accounting in the context of DeFi.
 
 I've created this post to share some of my learnings as an amateur, self-taught bookkeeper and
-expand the community of accounting interested DeFi users. Hopefully I can help some of you with your
-daily crypto / DeFi trading activities and maybe foster a small community of accounting interested
-nerds like me. 😄
+expand the community of accounting-interested DeFi users. Hopefully, I can help some of you with your
+daily crypto / DeFi trading activities. 😄
 
 ## Reasons To Learn Basic Accounting
 
-Before diving in to the actual content I wanted to lay out some reasons why you might want to learn
+Before diving into the actual content I wanted to lay out some reasons why you might want to learn
 the basics of accounting if you're not already motivated / interested. If you already know why you
 want to learn feel free to skip to the next [section]({% post_url 2023-01-30-defi-accounting-for-noobs %}#-crypto-tax-software--when-to-get-help-from-experts).
 
@@ -44,52 +43,52 @@ want to learn feel free to skip to the next [section]({% post_url 2023-01-30-def
 - Tax Avoidance 😎: If you want to save on taxes you need to understand your tax laws and how you
   can legally leverage them to your benefit
 - Insight & Understanding 📊: Accounting allows you to notice and quantify trends in your finances
-  as well as understand how you're spending and earning it, if you want to be able to optimize
+  as well as understand how you're spending and earning it if you want to be able to optimize
   something you have to be able to measure it first 
 - Unique mental model 🧠: If you're a DeFi smart contract developer or auditor understanding the basics of
-  financial accounting can give you a unqiue way of modeling value changes and transactions in
+  financial accounting can give you a unique way of modeling value changes and transactions in
   protocols, adding another useful mental model to apply to protocols.
 
 ### The Downsides Of An External Accountant
 While you could hire an accountant to do everything for you, unless you have a pretty sizable
-networth it will hardly be worth the cost. Most accountants are not familiar with crypto let alone
+net worth it will hardly be worth the cost. Most accountants are not familiar with crypto let alone
 obscure DeFi protocols. If your activity consists of more than just basic spot trades you'll likely
-have to spend time, money and effort explaining to a normal accountant how the different DeFi
-protocols, farms, NFTs and airdrops work.
+have to spend time, money, and effort explaining to a normal accountant how the different DeFi
+protocols, farms, NFTs, and airdrops work.
 
 ![Confused math lady meme with the caption "Your accountant trying to understand how you made y-figures off food coins"](/assets/images/confused-accountant-meme.jpg)
 
 Furthermore not having direct control of your "books" (accounting lingo for where all your
-transactions, inventory etc. are kept track of) limits your ability to optimize your taxes, making
+transactions, inventory, etc. are kept track of) limits your ability to optimize your taxes, making
 you completely reliant on advice from your accountant or other advisors.
  
 ## 💼 Crypto Tax Software & When To Get Help From Experts
-While this whole post is about accounting basics and how to easily keep track of ones' books there
+While this whole post is about accounting basics and how to easily keep track of one's books there
 are situations where you can and probably **should consult** with an expert. When it comes to filing
-tax statements for your yearly / quarterly reporting or better understanding the tax laws and how
+tax statements for your yearly/quarterly reporting or better understanding the tax laws and how
 they apply to your specific situation you should definitely consult professionals.
 
-In fact if you're just doing basic trades on exchanges and the popular DeFi protocols you should
-probably just use one of the many existing crypto tax softwares. They'll save you a lot of effort
+In fact, if you're just doing basic trades on exchanges and the popular DeFi protocols you should
+probably just use one of the many existing crypto tax software. They'll save you a lot of effort
 by automating the importing and classification of transactions.
 
-My personal approach is to do the accounting myself while consulting a tax advisor on the general
+My approach is to do the accounting myself while consulting a tax advisor on the general
 laws and how they might apply to my situation. When it comes time to report my taxes I also compile
 a bunch of summaries from my accounting and hand it over to the tax advisor for them to double-check
-and submit the necessary tax statements in a propper manner.
+and submit the necessary tax statements in a proper manner.
 
 ## 🫘 Beancount
 
-Beancount is an open-source, easy-to-use text based accounting tool. Unlike commercial
-accounting programs it's base feature set is relatively limited. While this may sound like
+Beancount is an open-source, easy-to-use text-based accounting tool. Unlike commercial
+accounting programs, its base feature set is relatively limited. While this may sound like
 a downside I think this is actually very useful as it makes it easy to use without getting distracted
-by overviews, charts and features I don't need.
+by overviews, charts, and features I don't need.
 
-While beancount is simple at its core you _can_ choose to make it as sophisticated you want by
+While Beancount is simple at its core you _can_ choose to make it as sophisticated as you want by
 installing and/or writing your own plugins or by simply leveraging the command-line tools that come
 along with beancount. Beancount has a very nice API making it easy to extend with Python.
 
-Furthermore as part of its core feature set it has some very nice handling of inventory or as it
+Furthermore, as part of its core feature set, it has some very nice handling of inventory or as it
 prefers to call it in its [documentation](https://beancount.github.io/docs/) "commodities". While
 not specifically made for crypto it's very well suited for accounting crypto transactions.
 
@@ -118,7 +117,7 @@ recommend using an editor like [VS Code](https://code.visualstudio.com/), while 
 by programmers note you don't need to know how to code to be able to use beancount.
 
 If you choose to go with VS Code you should install the Beancount plugin, it'll give you syntax
-highlighting, auto alignment, auto completion and more to make it even easier to manage your
+highlighting, auto alignment, auto-completion, and more to make it even easier to manage your
 entries.
 
 ![Beancount VS Code Plugin](/assets/images/beancount-vscode-plugin.png)

@@ -6,10 +6,17 @@ math: true
 
 ---
 
+![Switchboard operator](/assets/images/23-01-better-switches/switchboard-operator.jpg)
+
+_Image: Telecom switchboard operator[^1]_
+
 ## Intro
-Every[^1] smart contract on Ethereum and other EVM chains starts with its selector switch. Selector
+Every[^2] smart contract on Ethereum and other EVM chains starts with its selector switch. Selector
 switches tell the contract whether they've implemented the requested method and where the code for
-that method is actually found within the contract.
+that method is actually found within the contract. They're commonly reffered to as "function
+dispatchers" although I like to use the term _selector switch_ as they act like `switch` statements
+in common languages and also remind me of old-school telephone switchboard operators which would
+manually route your telephone call in the ol' days.
 
 Selector switches are executed upon every contract call meaning inefficiencies & optimizations in
 this area of the code will impact all calls and the general gas efficiency of the contract. The most
@@ -23,17 +30,20 @@ its opcodes (low-level EVM instructions); if you need a quick intro I'd recommen
 "Understanding the EVM" Tutorial section](https://docs.huff.sh/tutorial/evm-basics/#technical) as it
 gives a good overview of how the EVM works.
 
-This post will also go into the methods and techniques I used to build my constant gas, 21-function
-selector switch that only costs 67 gas.
+This post will also go into the methods and techniques I used to build my constant gas, 22-function,
+55 gas selector switch.
 
 ### Refresher: What Are Selectors?
 Selectors are standardized 4-byte identifiers used to identify methods across contracts. Function
 selectors are the left 4-bytes of the keccak hash of a function's _signature_. Since the data types
 of the parameters are also hashed this allows contracts to differentiate between functions that have
-the same name but different set of parameters like the `safeTransferFrom` method in [ERC721](https://eips.ethereum.org/EIPS/eip-721)
+the same name but different set of parameters like the `safeTransferFrom` methods in [ERC721](https://eips.ethereum.org/EIPS/eip-721)
 tokens. One thing to watch out for is selector collisions, these can occur because the selector
-is only the first 4 bytes of the actual hash, they are quite rare however, occuring mainly in CTFs,
-you can see an example of this in my write-up of the [Paradigm CTF 2022 "Hint Finance" challenge](http://localhost:4000/posts/paradigm-ctf-2022-write-up-collection/#hint-finance-).
+is only the first 4 bytes of the actual hash, they are quite rare however, occuring mainly in CTFs.
+You can see an example of vulnerability arising from a selector collision in my write-up of the
+[Paradigm CTF 2022 "Hint Finance" challenge](http://localhost:4000/posts/paradigm-ctf-2022-write-up-collection/#hint-finance-).
+
+#### Example
 
 **Function:**
 ```solidity
@@ -54,8 +64,9 @@ function withdraw(uint256 amount) external {
 **Call to `withdraw(1e18)`:**
 
 ```
-selector:      2e1a7d4d
-amount (1e18): 0000000000000000000000000000000000000000000000000de0b6b3a7640000
+selector:      0x2e1a7d4d
+amount (1e18): 0x0000000000000000000000000000000000000000000000000de0b6b3a7640000
+----------------------------------------------------------------------------------------
 calldata:      0x2e1a7d4d0000000000000000000000000000000000000000000000000de0b6b3a7640000
 ```
 
@@ -76,7 +87,7 @@ abstraction.
 
 ### Micro Huff Crashcourse
 
-Since I'll be denoting opcode snippets in this post in Huff I'll do an extremely brief intro to Huff
+Since I'll be denoting opcode snippets using Huff in this post I'll do an extremely brief intro to Huff
 here, you can find the full list of features here:
 [docs.huff.sh/get-started/huff-by-example/](https://docs.huff.sh/get-started/huff-by-example/).
 
@@ -88,7 +99,7 @@ of life.
 **Opcodes:**
 Opcodes in Huff are written in their _mnemonic_ i.e. "word form" and can be upper / lower case. The
 only exception are the `PUSH1` - `PUSH32` opcodes. For these the values can be written directly in
-hexadecimal and the compiler will find the shortest fitting push opcodes for thme e.g. `0x3213`
+hexadecimal and the compiler will find the shortest fitting push opcodes for thme e.g. `0x3212`
 compiles to `PUSH2 0x3213` (`0x613213`). Huff also allows for constants which are defined by
 `#define constant CONSTANT_NAME = 0x<constant value>` and are referenced by square brackets e.g.
 `[PERMIT_TYPEHASH]` and are compiled to `PUSH` opcodes.
@@ -197,7 +208,7 @@ which can be tricky.
 The binary search based selector switch is much more efficient than the simpler linear else-if
 switch for contracts with more functions. This is achieved by structuring the switch like a binary
 search tree, eliminating half the possible selectors at every step. This makes the time complexity
-logarithmic, $O(n)$: 
+logarithmic, $O(\log n)$: 
 
 ![Linear If-Else Switch Flow Chart](/assets/images/23-01-better-switches/binary-tree-switch-small.svg)
 
@@ -221,7 +232,7 @@ Like a binary search tree for integers you can create one for the selectors of t
 and then compare them with some middle value at every node. This is possible because the EVM has no
 notion of datatypes, it doesn't differentiate between strings, unsigned integers, signed integers,
 booleans, selectors or jump labels. To the EVM opcodes all values on the stack are 256-bit words,
-that can be added, subtracted, compared, against each other. To create our selector binary
+that can be added, subtracted and compared, against each other. To create our selector binary
 search tree we first need to interpret the 4-byte selectors as integers and sort them:
 
 ```
@@ -247,7 +258,7 @@ search tree we first need to interpret the 4-byte selectors as integers and sort
 0xd505accf // permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
 0xdd62ed3e // allowance(address, address)
 ```
-{: file='YAM-WETH Selectors'}
+{: file='METH-WETH Selectors'}
 
 You then continuously split the list of selectors in halves, saving the mid points as you go along,
 so that you can construct the tree:
@@ -283,7 +294,7 @@ so that you can construct the tree:
       0xd505accf // permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
       0xdd62ed3e // allowance(address, address)
 ```
-{: file='YAM-WETH Selector Splits'}
+{: file='METH-WETH Selector Splits'}
 
 The code then compares the selector to the mid value to see if it should jump left or right at every
 point:
@@ -299,6 +310,7 @@ point:
 > - `CALLVALUE`: Returns 0 if no ETH was sent along with the call, if you've already done a call value check
 >   (`assert(msg.value == 0)`) you can rely on the `CALLVALUE` opcode to always return `0` until the
 >   end of the call.
+> - `MSIZE` (memory size): Returns 0 as long as you haven't used memory yet
 {: .prompt-tip}
 
 ```
@@ -399,7 +411,7 @@ split_dest_1_2:
 ```
 {: file="Binary Tree Switch.huff"}
 
-Unlike the Diagram you'll notice that I didn't create split branches all the way down, but instead
+Unlike the diagram you'll notice that I didn't create split branches all the way down, but instead
 put small linear switches at the end once only 2-3 functions were left in the split. This is because
 a split branch can only cut the range of selectors in half but cannot confirm whether the selector
 matches exactly, you need a directly comparing "if-else" branch at the end of your tree. If you
@@ -417,7 +429,7 @@ split_dest_x:
     dup1 0xd0e30db0 eq deposit_dest jumpi (y + 44 gas to reach)
   split_dest_x_2:
     // Split x_2
-    dup1 0xd505accf eq permit_dest  jumpi (y + 45 gas to reach)
+    dup1 0xd505accf eq permit_dest  jumpi (y + 45 gas to reach, includes 1 gas for `JUMPDEST`)
 
 // Linear if-else for 2 functions:
 
@@ -439,7 +451,7 @@ compilers in terms of selector switch generation, to squeeze more gas out of our
 dive deeper, into the dark depth of opcode level optimization, but don't worry it's less intimidating
 than it sounds.
 
-## Constant Gas Switches
+## ⚡Constant Gas Switches
 
 Considering that the generated binary search switches are already optimal in terms of opcode use
 we need a completely different approach if we're going to improve the gas cost of existing selector
@@ -450,10 +462,10 @@ While $O(1)$ is theoretically optimal we'll also have to make sure the constant 
 cheaper than an alternative binary search or linear if-else switch. This is important because a naive
 $O(1)$ switch would e.g. be to store all jump destinations of the different functions in storage and
 load them when the contract gets executed, while this would use a constant amount of gas regardless
-of how many functions you have because it's a single `SLOAD` the cost of that operation would make
-it more expensive than nearly any alternative.
+of how many functions you have because it only needs a single `SLOAD`, the cost of that operation
+(2100) would make it more expensive than nearly any alternative.
 
-### Base Cost
+### 🧱 Base Cost
 
 Whenever I work on gas optimization I like to determine or at least approximate how efficient
 a solution could theoretically be. For gas cost this is usually down to what you need the code to do
@@ -483,15 +495,210 @@ no_match_error:
 ```
 {: file="single-function-switch.huff"}
 
-### Lookup Table Switches
+### Lookup Tables
 
-### Direct Switches
+To convert the selector into a jump label in constant gas we need to construct some type of array
+/ map data structure that stores the lookup table as those typically have constant $O(\log n)$ lookup times.
+
+
+#### Extracting Indices
+
+Considering that jump labels are 2-bytes large and selectors are 4-byte (32-bit) large values that would
+require an 8.5GB array or map (`2 ** 32 * 2`) so that every single selector can be mapped to a
+unique jump label. To reduce the size of our lookup table and make it fit into the [24kB Spurious Dragon
+contract size limit](https://eips.ethereum.org/EIPS/eip-170) we'll need to extract an index that
+sits in a smaller range, however this means that different selectors will result in the same index.
+This why the final, 19-gas direct selector comparison is necessary as we need to check for collision
+to make sure that when our contract is called with a selector that's not part of the ABI it'll
+actually revert:
+
+![Lookup switch](/assets/images/23-01-better-switches/lookup-switch.png)
+
+There are different ways to extract a unique index from the 4-byte selector:
+
+
+##### Hashing
+
+Hashing it the most general purpose way to map a set of selectors to a unique set of indices in
+a tight range. One just needs to search for a nonce that when hashed together with the selector
+results in a unique index. While it may require some longer searching for larger selector sets the
+search time can be reduced by increasing the accepted output range for indices. Code for such an
+index extractor would look something like this:
+
+```
+// Gets selector.
+pc calldataload 0xe0 shr  // [selector]
+
+// Combine nonce with selector, `nonce` should be a number left shifted by 32-bits.
+dup1 [NONCE] or           // [hash_preimage, selector]
+// Store in memory for hasing.
+msize mstore              // [selector]
+msize returndatasize sha3 // [hash, selector]
+[MASK] and                // [index, selector]
+
+```
+{:file='Hash Selector Indexer.huff'}
+
+While this is approach is quite general purpose it's not very efficient. With the required
+memory and `SHA3` opcode use it brings the base cost of this approach to 93 gas, not including the code
+to actually do the table lookup. Meaning it'll only really pay off when your contract start to have
+\>25 (or >40) functions, depending on the type of lookup table you're using.
+
+That's why as an alternative to hashing it can be cheaper to make a custom "hashing function" that
+condenses the selector to an index by combining bitwise-xor, bit-shifting and modulus operations in
+a more creative fashion. Either approach will require you to iterate through many combinations to
+find the most efficient setup.
+
+However if you're lucky and your selector set is smaller you can also use one of the following, more
+efficient selector indexing approaches:
+
+- code lookup table (37): 3 (push size) + 3 (push code offset) + 3 (add index code offset) + 3 (push mem offset) + 6 (codecopy) + 2 (push zero) + 3 (mload) + 3 (push mask2) + 3 (apply mask, and) + 8 (jump) = 37
+- push table (20): 3 (push table) + 3 (shift using index) + 3 (push table mask) + 3 (apply table mask) + 8 (jump)
+
+##### Direct Bit-Masking
+
+Looking at the selectors of the functions in your ABI as 32-bit binary values you can look to
+identify a set of bit positions across a tight range that are unique to all selectors e.g.:
+
+```
+               xx   xxx
+[0x06fdde03] 00000110111111011101111000000011 - {00___011} name()
+[0x95d89b41] 10010101110110001001101101000001 - {01___111} symbol()
+[0x313ce567] 00110001001111001110010101100111 - {11___100} decimals()
+[0x18160ddd] 00011000000101100000110111011101 - {01___000} totalSupply()
+[0x23b872dd] 00100011101110000111001011011101 - {10___110} transferFrom(address,address,uint256)
+[0xa9059cbb] 10101001000001011001110010111011 - {10___100} transfer(address, uint256)
+[0x70a08231] 01110000101000001000001000110001 - {11___010} balanceOf(address)
+[0x095ea7b3] 00001001010111101010011110110011 - {00___101} approve(address,uint256)
+[0xdd62ed3e] 11011101011000101110110100111110 - {01___101} allowance(address, address)
+[0xd0e30db0] 11010000111000110000110110110000 - {01___011} deposit()
+[0xb760faf9] 10110111011000001111101011111001 - {11___101} depositTo(address)
+[0x2e1a7d4d] 00101110000110100111110101001101 - {10___000} withdraw(uint256)
+[0x853828b6] 10000101001110000010100010110110 - {00___100} withdrawAll()
+[0xca9add8f] 11001010100110101101110110001111 - {00___010} withdrawAllTo(address)
+[0x205c2878] 00100000010111000010100001111000 - {10___001} withdrawTo(address, uint256)
+[0x9470b0bd] 10010100011100001011000010111101 - {01___001} withdrawFrom(address, uint256)
+[0x4a4089cc] 01001010010000001000100111001100 - {00___001} withdrawFromTo(address, address, uint256)
+[0x3644e515] 00110110010001001110010100010101 - {11___001} DOMAIN_SEPARATOR()
+[0x7ecebe00] 01111110110011101011111000000000 - {11___011} nonces(address)
+[0xd505accf] 11010101000001011010110011001111 - {01___100} permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
+[0xac9650d8] 10101100100101100101000011011000 - {10___010} multicall(bytes[])
+
+```
+
+In the above example there's a set of 5-bits in an 8-bit range that are unique across all selectors.
+The tight range is ideal as it means the range of values between the lowest and highest index is not
+so wide and the table in our contract can therefore be smaller. Extracting the index from a selector
+would require the operator `(selector >> MAGIC_SHIFT) & MAGIC_MASK` which for the above example
+would be `(selector >> 22) & 0c7`. In Huff:
+
+```
+// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+
+// Selector copied on stack because it would be needed for direct comparison later
+dup1                     // [selector; selector]
+0x16 shr 0xc7 and        // [index ∈ (0x00,0xff); selector ]
+
+```
+{:file='Index Extractor.huff'}
+
+##### Bit Splicing
+While there will always be a set of bit indices that are unique across all selectors they may not
+always be across a tight range, in fact it becomes increasingly less likely as the amount of
+functions in your contract increases. This presents an issue as the resulting index needs to be in
+a tight range for the table size to be practical. However there are a few tricks you can use to
+relatively efficient bring bits together that aren't close to each other.
+
+As an example let's Imagine you have an ABI such that the a set of unique bits across all selectors
+looks as follows (marked by `X`):
+
+`0 0 0 0 0 0 0 0 X X X X 0 0 0 0 0 0 0 0 0 0 0 X 0 X 0 0 0 0 0 0`
+
+Extracted with the code: `SELECTOR() 0x6 shr 0x3c005 and`, representing a range of 18-bits. However
+we can add a few simple operations to close the gap between the upper bits and the lower bits. By
+shifting and then bitwise OR-ing the values together we can create a resulting index that will
+always be in a smaller range:
+
+```
+Initially extracted: A B C D 0 0 0 0 0 0 0 0 0 0 0 E 0 F
+Shifted right by 11: 0 0 0 0 0 0 0 0 0 0 0 A B C D 0 0 0
+--------------------------------------------------------
+OR-ed together     : A B C D 0 0 0 0 0 0 0 A B C D E 0 F
+Lower bits masked  : 0 0 0 0 0 0 0 0 0 0 0 A B C D E 0 F
+```
+
+With just 3 operations (shift, or, and) we reduced the range of the resulting index while
+keeping the unique bits, in Huff this would look like this (0xb is 11 in hexadecimal):
+
+```
+// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+dup1 0x6 shr 0x3c005 and // [wide_index, selector]
+
+dup1 0xb shr             // [shifted_top_bits, wide_index, selector]
+or 0x7f and              // [narrow_index, selector]
+```
+
+This is quite efficient as it doesn't use a lot of opcodes and they're all base-2 operations
+(bit-wise OR, bit-shift, bit-wise AND) which cost 3 gas vs. other arithmetic operations like `mod`,
+`div` and `mul` which could also be used but cost 5 gas each.
+
+#### 🏗️ Building A Lookup Table in the EVM
+Similar to how there are several approaches with varying efficiencies when building a selector
+indexer that are also several approaches to building and retrieving values from lookup tables.
+
+##### Push Tables
+With these tables you can pack up to 16x 2-byte jump destinations into a single value and then have
+the table be pushed in its entirety onto the stack using a `PUSH` opcode. This is quite efficient as
+"loading" the table itself only requires 3 gas and retrieving a value 12 gas, assuming your index is
+already multiplied by 16 to ensure it's the right shift. The big constraint with this approach is
+that it only supports indices that are in the range 0-15 which will be an issue if your contract has
+more than 16 functions that need to be jumped to. Assuming you're able to find a group of 4-bits
+that is unique across all selectors the switch would look as follows:
+
+```
+// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+[JUMP_TABLE]             // [table]
+dup2 [IND_SHIFT] shr     // [shifted_selector, table, selector]
+// Mask offset by 4 bits to ensure result will be a valid table shift.
+0xf0 and                 // [index, table, selector]
+shr 0xffff and           // [jump_dest, selector]
+jump
+
+// At the jump destinations, check if selector matches:
+0x???????? sub error_dest jumpi
+FUNCTION_LOGIC()
+
+error_dest:
+  0x0 0x0 revert
+```
+{:file='16 Selector Switch.huff'}
+
+You can fit more than 16-destinations into a push table if the necessary information for each jump
+dest is less than 16-bits. For example if your functions are small enough such that you can
+practically pad their size in the bytecode to a power of 2 ($2^n$) then you'd only need $16- n$ unique
+bits to identify the jump destination of your functions, meaning each label takes up less space
+meaning more will fit in a 256-bit `PUSH32` opcode. Note that making such changes will not only
+require you to pad your functions but also adjust the above code, adding the required offset after
+the table lookup and potentially using different operations to determine the table shift.
+
+
+##### Table Trees
+Push tables can be extended to support more than 16-functions by creating a tree type structure,
+whereby the first table selects a sub-table that determines the final destination. While this is
+technically still a tree with logarithmic $O(\log n)$ time complexity it's still shown here as it
+can be very efficient for contracts with larger selector sets and is practically constant size as
+most contracts will at most need a tree with depth 2, or in extreme cases (>256 functions), depth 3.
+
+
+#### 🏃 Direct Jumping
 
 ## Advanc A Practical 67-Gas 21-Function Selector Switch
 
 
 ## Footnotes
-[^1]:
-    Every contract written in high level languages that target the EVM like Solidity, Vyper, Fe
-    have selector switches by default, however certain MEV bot contracts written in low level
-    languages / assembly may omit an ABI compliant selector switch to save on even more gas.
+[^1]: Joseph A. Carr, Attribution, via Wikimedia Commons
+[^2]:
+    Every contract written in high level languages that target the EVM like Solidity, Vyper, Fe have selector switches by default, however certain MEV bot contracts written in low level languages / assembly may omit an ABI compliant selector switch to save on even more gas.

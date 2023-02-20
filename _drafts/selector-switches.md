@@ -7,7 +7,6 @@ math: true
 ---
 
 ![Switchboard operator](/assets/images/23-01-better-switches/switchboard-operator.jpg)
-
 _Image: Telecom switchboard operator[^1]_
 
 ## Intro
@@ -16,7 +15,7 @@ switches tell the contract whether they've implemented the requested method and 
 that method is actually found within the contract. They're commonly reffered to as "function
 dispatchers" although I like to use the term _selector switch_ as they act like `switch` statements
 in common languages and also remind me of old-school telephone switchboard operators which would
-manually route your telephone call in the ol' days.
+manually route telephone calls.
 
 Selector switches are executed upon every contract call meaning inefficiencies & optimizations in
 this area of the code will impact all calls and the general gas efficiency of the contract. The most
@@ -30,8 +29,8 @@ its opcodes (low-level EVM instructions); if you need a quick intro I'd recommen
 "Understanding the EVM" Tutorial section](https://docs.huff.sh/tutorial/evm-basics/#technical) as it
 gives a good overview of how the EVM works.
 
-This post will also go into the methods and techniques I used to build my constant gas, 22-function,
-55 gas selector switch.
+This post will also go into how I used the presented methods to build a practical, 22-function,
+constant 55-gas selector switch for my improved Wrapped Ether implementation, dubbed [METH](https://github.com/philogy/meth-weth).
 
 ### Refresher: What Are Selectors?
 Selectors are standardized 4-byte identifiers used to identify methods across contracts. Function
@@ -43,7 +42,7 @@ is only the first 4 bytes of the actual hash, they are quite rare however, occur
 You can see an example of vulnerability arising from a selector collision in my write-up of the
 [Paradigm CTF 2022 "Hint Finance" challenge](http://localhost:4000/posts/paradigm-ctf-2022-write-up-collection/#hint-finance-).
 
-#### Example
+#### Selector Example
 
 **Function:**
 ```solidity
@@ -70,9 +69,10 @@ amount (1e18): 0x0000000000000000000000000000000000000000000000000de0b6b3a764000
 calldata:      0x2e1a7d4d0000000000000000000000000000000000000000000000000de0b6b3a7640000
 ```
 
-The precise specification can be found in the [Contract ABI Specification](https://docs.soliditylang.org/en/latest/abi-spec.html)
-which also specifices how arguments are encoded and some more precise details when it comes to
-actually computing the selector for different types.
+The precise specification of how selectors are defined and computed can be found in the
+[Contract ABI Specification](https://docs.soliditylang.org/en/latest/abi-spec.html), it specifices
+how arguments are encoded and some more precise details when it comes to actually
+computing the selector for different types.
 
 > If you've installed the [foundry](https://book.getfoundry.sh/) smart contract development
 > framework using `foundryup` you should have the `cast` tool installed which lets you easily get
@@ -82,19 +82,20 @@ actually computing the selector for different types.
 
 Having a common standard for selectors is extremely useful as it lets different contracts easily
 interact with each other without having to look up and implement some custom data and function
-encoding scheme for every contract. It also allows higher level languages to offer some neat
-abstraction.
+encoding scheme for every contract. It also allows higher level languages to offer some abstraction
+in the form of public / external methods.
 
 ### Micro Huff Crashcourse
 
 Since I'll be denoting opcode snippets using Huff in this post I'll do an extremely brief intro to Huff
-here, you can find the full list of features here:
+here, you can find a full list of Huff's features here:
 [docs.huff.sh/get-started/huff-by-example/](https://docs.huff.sh/get-started/huff-by-example/).
 
 **What is Huff?:** Huff is a low-level assembly language for the EVM, it's basically just _mnemonic
 bytecode_ (bytecode but written as aliases "SLOAD", "DUP1" rather than the byte values) with some
-syntatic sugar around selectors, constants and jump destinations to improve the developer's quality
-of life.
+syntatic sugar around selectors, constants and jump destinations to improve the developer
+experience.
+
 
 **Opcodes:**
 Opcodes in Huff are written in their _mnemonic_ i.e. "word form" and can be upper / lower case. The
@@ -102,7 +103,7 @@ only exception are the `PUSH1` - `PUSH32` opcodes. For these the values can be w
 hexadecimal and the compiler will find the shortest fitting push opcodes for thme e.g. `0x3212`
 compiles to `PUSH2 0x3213` (`0x613213`). Huff also allows for constants which are defined by
 `#define constant CONSTANT_NAME = 0x<constant value>` and are referenced by square brackets e.g.
-`[PERMIT_TYPEHASH]` and are compiled to `PUSH` opcodes.
+`[PERMIT_TYPEHASH]` and are also compiled to `PUSH` opcodes.
 
 **Jump Labels & Destinations:**
 Jump labels are convenient way to manage jumps without having to manually recalculate all
@@ -115,14 +116,14 @@ requires 1 byte.
 **Macros:**
 Macros are kind of like functions in higher level languages. They're bits of code you can reuse
 and are inserted inline by the compiler whenever referenced. They can also have static arguments
-which are also inserted at compile time. Within the macro static arguments are referenced by angled
+which are also inserted at compile time. Within the macro, static arguments are referenced by angled
 brackets and the name of the argument e.g. `<zero>`. Macro arguments can be static values, jump
 labels or opcodes.
 
 **Other features:**
 Huff has a few other features like `fn` macros, tables, helper functions and even a way to define
 tests but I won't be using most of them for this post outside of tables which I'll introduce once we
-start using them. You can check out the extra features with above link to Huff's "Huff by example"
+start using them. You can check out the extra features with the above link to Huff's "Huff by example"
 section.
 
 > Because Huff is so essentially mnemonic opcodes with bells and whistles I'll also be using it to
@@ -313,6 +314,7 @@ point:
 > - `MSIZE` (memory size): Returns 0 as long as you haven't used memory yet
 {: .prompt-tip}
 
+
 ```
 // -- Get 4 byte selector
 pc calldataload 0xe0 shr     // [selector]
@@ -386,7 +388,7 @@ split_dest_1_2:
       dup1 0x9470b0bd eq withdrawFrom_dest  jumpi
       returndatasize returndatasize revert
 
-    split_dest_1_2_1_2;
+    split_dest_1_2_1_2:
       // Split 1_2_1_2
       dup1 0x95d89b41 eq symbol_dest    jumpi
       dup1 0xa9059cbb eq transfer_dest  jumpi
@@ -402,7 +404,7 @@ split_dest_1_2:
       dup1 0xb760faf9 eq depositTo_dest       jumpi
       returndatasize returndatasize revert
 
-    split_dest_1_2_2_2;
+    split_dest_1_2_2_2:
       // Split 1_2_2_2
       dup1 0xd0e30db0 eq deposit_dest   jumpi
       dup1 0xd505accf eq permit_dest    jumpi
@@ -495,13 +497,15 @@ no_match_error:
 ```
 {: file="single-function-switch.huff"}
 
-### Lookup Tables
 
-To convert the selector into a jump label in constant gas we need to construct some type of array
-/ map data structure that stores the lookup table as those typically have constant $O(\log n)$ lookup times.
+### Constant-lookup Datastructures
 
+When it comes to looking up data based on some key in constant-time the two main data structures
+that come to mind are arrays and hash maps. Since the EVM does not offer a native map / array opcode
+([yet](https://eips.ethereum.org/EIPS/eip-4200)), we'll look at different ways we can build these
+data structures using the building blocks provided by the EVM.
 
-#### Extracting Indices
+### Selector Indexing
 
 Considering that jump labels are 2-bytes large and selectors are 4-byte (32-bit) large values that would
 require an 8.5GB array or map (`2 ** 32 * 2`) so that every single selector can be mapped to a
@@ -517,11 +521,11 @@ actually revert:
 There are different ways to extract a unique index from the 4-byte selector:
 
 
-##### Hashing
+#### Hashing
 
 Hashing it the most general purpose way to map a set of selectors to a unique set of indices in
 a tight range. One just needs to search for a nonce that when hashed together with the selector
-results in a unique index. While it may require some longer searching for larger selector sets the
+results in a unique index (mod n). While it may require some longer searching for larger selector sets the
 search time can be reduced by increasing the accepted output range for indices. Code for such an
 index extractor would look something like this:
 
@@ -552,10 +556,8 @@ find the most efficient setup.
 However if you're lucky and your selector set is smaller you can also use one of the following, more
 efficient selector indexing approaches:
 
-- code lookup table (37): 3 (push size) + 3 (push code offset) + 3 (add index code offset) + 3 (push mem offset) + 6 (codecopy) + 2 (push zero) + 3 (mload) + 3 (push mask2) + 3 (apply mask, and) + 8 (jump) = 37
-- push table (20): 3 (push table) + 3 (shift using index) + 3 (push table mask) + 3 (apply table mask) + 8 (jump)
 
-##### Direct Bit-Masking
+#### Direct Bit-Masking
 
 Looking at the selectors of the functions in your ABI as 32-bit binary values you can look to
 identify a set of bit positions across a tight range that are unique to all selectors e.g.:
@@ -590,7 +592,7 @@ In the above example there's a set of 5-bits in an 8-bit range that are unique a
 The tight range is ideal as it means the range of values between the lowest and highest index is not
 so wide and the table in our contract can therefore be smaller. Extracting the index from a selector
 would require the operator `(selector >> MAGIC_SHIFT) & MAGIC_MASK` which for the above example
-would be `(selector >> 22) & 0c7`. In Huff:
+would be `(selector >> 22) & 0xc7`. In Huff:
 
 ```
 // Gets selector.
@@ -603,12 +605,12 @@ dup1                     // [selector; selector]
 ```
 {:file='Index Extractor.huff'}
 
-##### Bit Splicing
+#### Bit Splicing
 While there will always be a set of bit indices that are unique across all selectors they may not
 always be across a tight range, in fact it becomes increasingly less likely as the amount of
 functions in your contract increases. This presents an issue as the resulting index needs to be in
 a tight range for the table size to be practical. However there are a few tricks you can use to
-relatively efficient bring bits together that aren't close to each other.
+bring bits together that aren't close to each other.
 
 As an example let's Imagine you have an ABI such that the a set of unique bits across all selectors
 looks as follows (marked by `X`):
@@ -644,11 +646,11 @@ This is quite efficient as it doesn't use a lot of opcodes and they're all base-
 (bit-wise OR, bit-shift, bit-wise AND) which cost 3 gas vs. other arithmetic operations like `mod`,
 `div` and `mul` which could also be used but cost 5 gas each.
 
-#### 🏗️ Building A Lookup Table in the EVM
+### 🏗️ Building Lookup Tables in the EVM
 Similar to how there are several approaches with varying efficiencies when building a selector
 indexer that are also several approaches to building and retrieving values from lookup tables.
 
-##### Push Tables
+#### Push Tables
 With these tables you can pack up to 16x 2-byte jump destinations into a single value and then have
 the table be pushed in its entirety onto the stack using a `PUSH` opcode. This is quite efficient as
 "loading" the table itself only requires 3 gas and retrieving a value 12 gas, assuming your index is
@@ -676,26 +678,244 @@ error_dest:
 ```
 {:file='16 Selector Switch.huff'}
 
-You can fit more than 16-destinations into a push table if the necessary information for each jump
-dest is less than 16-bits. For example if your functions are small enough such that you can
-practically pad their size in the bytecode to a power of 2 ($2^n$) then you'd only need $16- n$ unique
-bits to identify the jump destination of your functions, meaning each label takes up less space
-meaning more will fit in a 256-bit `PUSH32` opcode. Note that making such changes will not only
-require you to pad your functions but also adjust the above code, adding the required offset after
-the table lookup and potentially using different operations to determine the table shift.
+You can fit more than 16 labels into a push table if each label is smaller than 16-bits. This
+will amost certainly be the case as the current contract size limit is 24kB meaning the largest
+realistic jump destination would only require 15-bits. Depending on your contract size your jump
+labels may take up even less space. However an important thing to note is that if the bit-size of
+your labels is not a power of 2 you'll need an additional push and multiplication operation to
+compute the shift for the lookup. Example with jump label size of 12-bits (`0xc` in hexadecimal):
 
+```
+// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+[JUMP_TABLE]             // [table]
+dup2 [IND_SHIFT] shr     // [shifted_selector, table, selector]
+// Mask unique bits
+0x1f and                 // [index, table, selector]
+// Multiply by 12 to get the offset of the label
+0xc mul                  // [label_offset, table, selector]
+shr 0xfff and            // [jump_dest, selector]
+jump
 
-##### Table Trees
-Push tables can be extended to support more than 16-functions by creating a tree type structure,
+// At the jump destinations, check if selector matches:
+0x???????? sub error_dest jumpi
+FUNCTION_LOGIC()
+
+error_dest:
+  0x0 0x0 revert
+```
+{:file='12-bit labels.huff'}
+
+#### Table Trees
+Push tables can be extended to support even more functions by creating a shallow tree
 whereby the first table selects a sub-table that determines the final destination. While this is
-technically still a tree with logarithmic $O(\log n)$ time complexity it's still shown here as it
-can be very efficient for contracts with larger selector sets and is practically constant size as
-most contracts will at most need a tree with depth 2, or in extreme cases (>256 functions), depth 3.
+technically still a tree with logarithmic $O(\log n)$ time complexity, practically its time
+complexity is constant as you'll never need a tree that's deeper than 3 levels. Using such a tree makes
+selector indexing even easier as you don't need to find a tight bit range that uniquely identifies
+all selectors but instead you just need to find a smaller range that groups selectors together in
+groups no larger than 16, with each group able to have their own range.
 
+As an example imagine a contract with 128-functions:
 
-#### 🏃 Direct Jumping
+```
+0x4482d182 0xf5d05a80 0x24ce2433 0x82c35051 0x9eb17fb7 0x4802a7fd 0x2c0e5bac 0xf8313123
+0x4e2464cd 0x9d5f65e1 0x0fa9584d 0x6f019090 0xf4f3fbb8 0x29cd002a 0xb82bf507 0x4c0656c3
+0xbd0a5449 0x59327a62 0x3c253f7f 0x969e72a9 0x0a7a2ceb 0x5c46eeab 0xac4ab926 0x84089c91
+0x4dc74a98 0x55cac09d 0x02a69ada 0x5acc746b 0xebab72a8 0xce280460 0x5820c09a 0x522fecc8
+0xced910c1 0xaed519b4 0xe850db0f 0x144db955 0x64a42fda 0xb569a22a 0x78890a44 0x96eb0ebc
+0x237e81b6 0x605a6e34 0x63ae1af7 0x25a86543 0xd7d01f4a 0xf6763fed 0xc8fa772d 0x10897e4e
+0xb85abce6 0xaa77f58e 0x3bedf0bb 0x149791ea 0x3eeb3d98 0xe59dc2db 0x063cdcb2 0xfadb4823
+0xa008b45a 0xb84df3af 0x9fb39812 0xc8a0ebf2 0xe7ad912d 0x94a32c56 0xd2b1a96a 0xd4a8589d
+0x4dd90963 0xb4830428 0x7cf58051 0x6573a075 0xcdc89bc1 0x7889cf21 0x03682317 0xc06a9ed2
+0x46f2c6b0 0x06544126 0x078d22e1 0x4f492320 0xb6a69d6c 0x103eedc6 0x2f3cb837 0xeac9fedb
+0xf6d647f0 0x6b0dc469 0x81a6d8df 0x2b2911a4 0x02e71741 0xc746d79d 0x0c97fce9 0xff4ab2e2
+0xb83ac239 0x40341065 0x00bc2475 0x36dd0f40 0x378a6476 0x6491330a 0x8a104473 0x0d33ae64
+0xb68734d9 0xde45a986 0xd70e58ee 0xebaf8b57 0xcc5ade18 0x94fbb841 0xcd42e3d1 0xb387c57a
+0xde1e50f3 0x94a40bdf 0xc59f70c9 0x9ff884da 0xc3a075fe 0x81ebea85 0x75b569d7 0x07dcb7bf
+0x30aa9aae 0x21770e06 0x88e13c98 0x9ff7735a 0x0d2c39db 0x656f06d0 0x5971a031 0x4925d035
+0x042a2f53 0x50fce891 0xb673685b 0xa54741fc 0x9c527625 0xa55cf11c 0x2ba1c786 0x3bd3b8ec
+```
+
+You can then find a 4-bit mask that splits the selectors into distincts groups:
+
+```
+root mask: 00000000000000000000000000001111
+group (0000):
+  gmask: 00000000000000000000000001111000
+  [0xf5d05a80,0x6f019090,0xce280460,0x46f2c6b0,0x4f492320,0xf6d647f0,0x36dd0f40,0x656f06d0]
+group (0010):
+  gmask: 00000000000000000000000011110000
+  [0x4482d182,0x59327a62,0x063cdcb2,0x9fb39812,0xc8a0ebf2,0xc06a9ed2,0xff4ab2e2]
+group (0100):
+  gmask: 00000000000000000000000011110000
+  [0xaed519b4,0x78890a44,0x605a6e34,0x2b2911a4,0x0d33ae64]
+group (0101):
+  gmask: 00000000000000001111000000000000
+  [0x144db955,0x6573a075,0x40341065,0x00bc2475,0x81ebea85,0x4925d035,0x9c527625]
+group (0110):
+  gmask: 00001111000000000000000000000000
+  [0xac4ab926,0x237e81b6,0xb85abce6,0x94a32c56,0x06544126,0x103eedc6,0x378a6476,0xde45a986,0x21770e06,0x2ba1c786]
+group (0111):
+  gmask: 00000000000000000000000011110000
+  [0x9eb17fb7,0xb82bf507,0x63ae1af7,0x03682317,0x2f3cb837,0xebaf8b57,0x75b569d7]
+group (1000):
+  gmask: 11110000000000000000000000000000
+  [0xf4f3fbb8,0x4dc74a98,0xebab72a8,0x522fecc8,0x3eeb3d98,0xb4830428,0xcc5ade18,0x88e13c98]
+group (1001):
+  gmask: 00000000000000000000000011110000
+  [0xbd0a5449,0x969e72a9,0x6b0dc469,0x0c97fce9,0xb83ac239,0xb68734d9,0xc59f70c9]
+group (1011):
+  gmask: 00000000000000000001111000000000
+  [0x0a7a2ceb,0x5c46eeab,0x5acc746b,0x3bedf0bb,0xe59dc2db,0xeac9fedb,0x0d2c39db,0xb673685b]
+group (1100):
+  gmask: 00000000000000000000000011110000
+  [0x2c0e5bac,0x96eb0ebc,0xb6a69d6c,0xa54741fc,0xa55cf11c,0x3bd3b8ec]
+group (1110):
+  gmask: 00000000000000000000000001111000
+  [0x10897e4e,0xaa77f58e,0xd70e58ee,0xc3a075fe,0x30aa9aae]
+group (1111):
+  gmask: 00000000000000000001111000000000
+  [0x3c253f7f,0xe850db0f,0xb84df3af,0x81a6d8df,0x94a40bdf,0x07dcb7bf]
+```
+
+#### Table in Code
+As an alternative to using the `PUSH` opcode to store & load lookup tables, which limits you to
+32-bytes at a time you can store larger lookup tables directly in the bytecode and load the target
+label with `CODECOPY`. In Huff this is enabled by the jump-table syntax:
+
+```
+// Example for non-packed table from Huff's docs
+#define jumptable SWITCH_TABLE {
+    jump_one jump_two jump_three jump_four
+}
+
+// Packed version
+#define jumptable__packed SWITCH_TABLE_TIGHT {
+    jump_one jump_two jump_three jump_four
+}
+
+#define macro MAIN() = takes(0) returns(0) {
+    // Push bytecode offset of table onto the stack
+    __tablestart(SWITCH_TABLE)
+}
+
+```
+{:file='Huff Jump Tables'}
+
+While this approach lends itself well to larger selectors sets it does use more gas than a 1-level
+push table as you need to copy the jump dest into memory using `CODECOPY` and then load it using
+`MLOAD`.
+
+#### 🏃 Code as Table / Direct Jumping
+Instead of looking up the jump destination based on some derived index you could directly convert it
+to a jump destination and jump to it. To do this the jump destinations should be evenly spaced so
+that the index can easily be converted to a jump dest: `jump_dest = index * dest_spacing + offset`.
+Even spacing comes at the large downside of increased bytecode size as you'll need to pad the
+bytecode of all your methods to be as large as your largest method:
+
+![Linear If-Else Switch Flow Chart](/assets/images/23-01-better-switches/padded-code-1.svg)
+_Illustration of the bytecode of a contract utilizng padding to allow for direct jump destination
+determination_
+
+In Huff:
+
+```
+GET_SELECTOR()             // [selector]
+dup1 GET_IND()             // [index, selector]
+[SPACING] mul [OFFSET] add // [jump_dest, selector]
+jump
+
+// Code At every function
+// Label required in Huff to ensure `JUMPDEST` is generated during compilation
+// otherwise dynamic `JUMP` will revert
+fn1:
+// '0x????????' represents the expected selector
+0x???????? sub revert_dest jumpi
+  // Actual function logic
+// Bytecode padding (simplest being 0-bytes which are interpreted as stop opcodes)
+stop stop // ......
+
+revert_dest:
+  0x0 0x0 revert
+```
+{:file='Direct Jump Selector Switch in Huff'}
+
+Depending on your chosen selector indexing method, entire code sections may have to be empty with
+only a revert at the beginning to correctly handle incorrect selectors. The "Selector Check" code
+ensures that the selector is actually part of the ABI and didn't just e.g. have the same bits as
+a different valid selector.
+
+**Saving on Padding by rearranging code:**
+
+Instead of having the different functions have the same bytecode size we can move up the
+selector-check code and pad those instances instead of the actual functions to massively reduce the
+overall bytecode. This can be crucial because depending on the size of functions and index range it
+may not even be feasible to pad functions. Since the selector-check utilizes a `JUMPI`-op anyway the
+destination can simply be set to the actual functions instead of the revert code. This does however
+add 1-gas to the runtime gas cost due to the added `JUMPDEST`. Rearranging the code makes it look
+like this:
+
+> The blocks are not meant to be accurate, proportional display of bytecode size put rather
+> a rough, visual representation
+{:.prompt-info}
+
+![Linear If-Else Switch Flow Chart](/assets/images/23-01-better-switches/padded-code-2.svg)
+
+```
+GET_SELECTOR()             // [selector]
+dup1 GET_IND()             // [index, selector]
+[SPACING] mul [OFFSET] add // [jump_dest, selector]
+jump
+
+// For every possible destination:
+dest1:
+  0x???????? eq fn1 jumpi
+  0x0 0x0 revert
+dest2:
+  0x???????? eq fn2 jumpi
+  0x0 0x0 revert
+dest3:
+  0x0 0x0 revert
+  stop stop stop stop stop stop stop stop stop stop
+  // (10-bytes padding required to match `PUSH4 <4x?> EQ PUSH2 <2x?> JUMPI`)
+dest4:
+  0x???????? eq fn3 jumpi
+  0x0 0x0 revert
+
+fn1:
+  // Code for function 1
+fn2:
+  // Code for function 2
+fn3:
+  // Code for function 3
+```
+{:file='Compact Direct Jump Selector Switch in Huff'}
+
+The packed block of selector-checks and reverts is also why I like to call this approach the "code
+as table" approach, because while it's not exactly a lookup table, the contract's code acts like one by
+translating the initial jump to the final destination through its execution.
+
+### Bringing it Together
+
+When building selector switches the main tradeoff will be between gas efficiency and code size. Without
+sacrificing too much in code size you can already have large gains in gas efficiency, especially
+for contracts with larger selector sets. To save even more gas you could sacrifice collision resistance,
+removing the selector-check. However I'd highly discourage this as it may lead to vulnerabilities in
+interacting contracts that expect external contracts to revert for calls to unsupported methods.
+
+## Efficient Selector Switches Post EIP-4200
+
+In the suite of upcoming EOF upgrades to the EVM, [EIP-4200](https://eips.ethereum.org/EIPS/eip-4200)
+proposes adding new jump opcodes to replace the existing `JUMP`, `JUMPI` and `JUMPDEST` opcodes that
+are responsible for branching and jumping in EVM contracts today.
+
 
 ## Advanc A Practical 67-Gas 21-Function Selector Switch
+
+### Notes to remove
+
+- code lookup table (37): 3 (push size) + 3 (push code offset) + 3 (add index code offset) + 3 (push mem offset) + 6 (codecopy) + 2 (push zero) + 3 (mload) + 3 (push mask2) + 3 (apply mask, and) + 8 (jump) = 37
+- push table (20): 3 (push table) + 3 (shift using index) + 3 (push table mask) + 3 (apply table mask) + 8 (jump)
 
 
 ## Footnotes

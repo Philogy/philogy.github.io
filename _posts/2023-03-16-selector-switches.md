@@ -1124,10 +1124,11 @@ selector indexer can have an index range size of up to 256 at no big cost.
 
 
 ## Conclusion
+
 Function dispatchers are an important part of smart contracts and have so far remained relatively
-unexplored in the optimizooor space. Especially pre-EIP-4200 there's a lot of room for clever tricks
-and optimizing the dispatcher of a larger contract can help shave 10, 20, 40+ gas from your contract
-which can be a lot in the land of hyper-optimized Huff contracts.
+unexplored in the optimizooor space. Especially pre-EIP-4200 there's a lot of room for clever
+tricks, optimizing the dispatcher of a larger contract can help shave 10, 20, 40+ gas from your contract
+which can be a lot in the land of hyper-optimized Huff contracts. 
 
 I hope this post was valuable to you, feel free to give your thoughts and feedback and follow me
 on my Twitter [@real_philogy](https://twitter.com/real_philogy) for more technical crypto content.

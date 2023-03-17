@@ -41,7 +41,7 @@ the same name but different sets of parameters like the `safeTransferFrom` metho
 tokens. One thing to watch out for is selector collisions, these can occur because the selector
 is only the first 4 bytes of the actual hash, they are quite rare however, occurring mainly in CTFs.
 You can see an example of vulnerability arising from a selector collision in my write-up of the
-[Paradigm CTF 2022 "Hint Finance" challenge](http://localhost:4000/posts/paradigm-ctf-2022-write-up-collection/#hint-finance-).
+[Paradigm CTF 2022 "Hint Finance" challenge]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-).
 
 #### Selector Example
 

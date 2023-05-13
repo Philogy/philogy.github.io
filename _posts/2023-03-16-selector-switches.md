@@ -314,6 +314,9 @@ point:
 >   (`assert(msg.value == 0)`) you can rely on the `CALLVALUE` opcode to always return `0` until the
 >   end of the call.
 > - `MSIZE` (memory size): Returns 0 as long as you haven't used memory yet
+>
+> Note that this is no longer necessary on chains with the Shanghai upgrade as you can just use the
+> `PUSH0` opcode which will always cost 2 gas and push 0 onto the stack regardless of context.
 {: .prompt-tip}
 
 
@@ -475,7 +478,7 @@ Whenever I work on gas optimization I like to determine or at least approximate 
 a solution could theoretically be. For gas cost this is usually down to what you need the code to do
 and what you're working with. In general, when building a selector switch there are two pieces that cannot
 be avoided:
-1. Isolating the selector from calldata: `<zero push> calldataload` + \[`PUSH1 0xe0 SHR` / `PUSH32 0xffffffff00000000000000000000000000000000000000000000000000000000 AND`\] (11 gas, assuming zero-push is a 2 gas opcode such as `PC` or `RETURNDATASIZE`)
+1. Isolating the selector from calldata: `<zero push> calldataload` + \[`PUSH1 0xe0 SHR` / `PUSH32 0xffffffff00000000000000000000000000000000000000000000000000000000 AND`\] (11 gas, assuming the zero-push is a 2 gas opcode such as `PC`, `RETURNDATASIZE` or `PUSH0` itself)
 2. Checking if the selector is an exact match: `PUSH4 <expected_selector>` \[`eq` / `sub`\] `PUSH1/2 <code / revert dest> JUMPI` (19 gas)
 
 So we can confidently say that no ABI compliant selector switch, that reverts upon unmatching

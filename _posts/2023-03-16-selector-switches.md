@@ -1036,6 +1036,14 @@ Non-payable Functions|60
 **Note:** _the gas cost does not include the cost to read the selector as I don't consider that part of
 the "dispatcher" and it's required regardless of the type of dispatcher you create._
 
+> **Update**:
+> The above gas cost figures are no longer fully accurate for METH's function dispatcher. This is
+> because for certain methods with checks e.g. `transfer`, METH now combines the selector-check with
+> the balance-check to save on gas by reducing the amount of unique `JUMPI` instructions. The cost
+> of the `JUMPI` is therefore no longer solely carried by the dispatcher and is in practice reduced
+> depending how you want to attribute its costs.
+{: .prompt-info}
+
 The dispatcher is so efficient because of how the selectors are laid out. Specifically, the highest
 8-bits of the selectors are unique for all functions. 8-bits or 0-255 is a small enough range where
 the locations for the selector checks still fit into the 24kB contract size limit. The unique bits
@@ -1061,7 +1069,8 @@ serves two purposes:
 1. It "evens out" the lower bits of the output value to ensure that the possible output values are
    evenly spaced out
 2. It ensures the minimum output value is `15` or `b1111`, meaning the receive-fallback function and selectors with 8 zero
-  upper bits can still result in a valid jump destination
+  upper bits can still result in a valid jump destination without having to use an additional `PUSH`
+  & `ADD` operation.
 
 I then use the "code as table" approach adding selector checks with the final destinations at all
 valid jump destinations and a simple `JUMPDEST PUSH0 PUSH0 REVERT`, with padding at all invalid
@@ -1099,6 +1108,14 @@ The main downside to this function dispatcher is code size, with 256 possible de
 and each block being padded to 16 bytes large the function dispatcher alone is 4.1 kB large 🤯.
 However, this is a worthy tradeoff to me as the cost of the contract's size is one-time and paid at
 deployment vs. the runtime gas cost which will continuously be paid by all users of METH.
+
+> **Update**:
+> METH has moved to using the "padded function" approach whereby each destination is 64-bytes large,
+> blowing up the contract's size to 16kB (the majority of which is padding). This is mainly to allow
+> for `JUMPI` reuse between the selector-check and other checks. Due to certain functions being
+> larger than 64-bytes they overflow into the next block meaning certain unimplemented selectors
+> will revert exceptionally (using all gas) rather than being simply reverted.
+{: .prompt-info}
 
 ## Efficient Function Dispatchers Post EIP-4200
 

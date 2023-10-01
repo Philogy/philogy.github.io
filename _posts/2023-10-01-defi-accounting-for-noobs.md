@@ -684,8 +684,8 @@ If you're manually selecting lots you have to make sure that your selection in t
 #### Universal vs. Per Account Booking
 FIFO, LIFO and HIFO all require you to keep track of inventory you can book from. While you could
 keep track of one inventory for every account (Exchange A, Exchange B, Wallet 1, Wallet 2, etc.)
-this separation starts to break down when you transfer assets between locations. That's for crypto
-it's usually more practical to keep track a single inventory and do "universal booking" meaning
+this separation starts to break down when you transfer assets between locations. That's why for crypto
+it's usually more practical to keep track of a single inventory and do "universal booking" meaning
 regardless where you buy / sell your assets you're always booking from the
 
 

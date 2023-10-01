@@ -28,7 +28,7 @@ daily crypto / DeFi trading activities. 😄
 
 Before diving into the actual content I wanted to lay out some reasons why you might want to learn
 the basics of accounting if you're not already motivated / interested. If you already know why you
-want to learn feel free to skip to the next [section]({% post_url 2023-01-30-defi-accounting-for-noobs %}#-crypto-tax-software--when-to-get-help-from-experts).
+want to learn feel free to skip to the next [section]({% post_url 2023-10-01-defi-accounting-for-noobs %}#-crypto-tax-software--when-to-get-help-from-experts).
 
 - Tax Compliance 🥸: If you want to easily and accurately determine your income you need
   a consistent system

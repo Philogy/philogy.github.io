@@ -1,18 +1,10 @@
 ---
-title: "[DRAFT] Beancount: DeFi Accounting For Noobs"
-date: 2023-01-30 21:52
-categories: [drafts]
+title: "Beancount: DeFi Accounting For Noobs"
+date: 2023-10-01 20:45
+categories: []
 tags: [DeFi, accounting, beancount]
 
 ---
-
-> **Public Draft Status**
->
-> Note that this post is a public draft and may still be rough around the edges. Feel free to
-> privately DM me any feedback on Twitter. 
-{: .prompt-info}
-
-
 
 > **Disclaimer**
 >
@@ -44,7 +36,7 @@ want to learn feel free to skip to the next [section]({% post_url 2023-01-30-def
   can legally leverage them to your benefit
 - Insight & Understanding 📊: Accounting allows you to notice and quantify trends in your finances
   as well as understand how you're spending and earning it if you want to be able to optimize
-  something you have to be able to measure it first 
+  something you have to be able to measure it first
 - Unique mental model 🧠: If you're a DeFi smart contract developer or auditor understanding the basics of
   financial accounting can give you a unique way of modeling value changes and transactions in
   protocols, adding another useful mental model to apply to protocols.
@@ -61,7 +53,7 @@ protocols, farms, NFTs, and airdrops work.
 Furthermore not having direct control of your "books" (accounting lingo for where all your
 transactions, inventory, etc. are kept track of) limits your ability to optimize your taxes, making
 you completely reliant on advice from your accountant or other advisors.
- 
+
 ## 💼 Crypto Tax Software & When To Get Help From Experts
 While this whole post is about accounting basics and how to easily keep track of one's books there
 are situations where you can and probably **should consult** with an expert. When it comes to filing
@@ -255,8 +247,8 @@ change more than 1 account:
 
 ```
 ; Opening (doesn't have to on the same day)
-2022-12-18 open Assets:Cash:Bank-A      
-2022-12-18 open Assets:Cash:Physical    
+2022-12-18 open Assets:Cash:Bank-A
+2022-12-18 open Assets:Cash:Physical
 2022-12-18 open Expenses:Fees:Bank-A:ATM
 
 ; Transaction
@@ -280,8 +272,8 @@ balance the transaction for you automatically:
 
 ```
 ; Opening (doesn't have to on the same day)
-2022-12-18 open Assets:Cash:Bank-A      
-2022-12-18 open Assets:Cash:Physical    
+2022-12-18 open Assets:Cash:Bank-A
+2022-12-18 open Assets:Cash:Physical
 2022-12-18 open Expenses:Fees:Bank-A:ATM
 
 ; Transaction
@@ -388,7 +380,7 @@ you took all your assets and paid off your debts. They're mainly used when you s
 
 ; Transactions
 2022-01-01 * "Opening balances"
-  
+
 
 ; inbetween transactions
 
@@ -537,7 +529,7 @@ booking rules private individuals vs. corporations can use.
 #### FIFO (First In First Out)
 The "First In First Out" booking method, dictates that the oldest lots are to be used first and is
 one of the most common booking methods. This method is applicable in both the US and Germany and is
-supported by beancount of the box: 
+supported by beancount of the box:
 
 ```
 2022-01-01 open Assets:Cash:Exchange-A
@@ -694,7 +686,7 @@ FIFO, LIFO and HIFO all require you to keep track of inventory you can book from
 keep track of one inventory for every account (Exchange A, Exchange B, Wallet 1, Wallet 2, etc.)
 this separation starts to break down when you transfer assets between locations. That's for crypto
 it's usually more practical to keep track a single inventory and do "universal booking" meaning
-regardless where you buy / sell your assets you're always booking from the 
+regardless where you buy / sell your assets you're always booking from the
 
 
 ## DeFi Accounting
@@ -726,7 +718,7 @@ net gain and don't have to check whether or not a given trade realized a loss or
     Income:Crypto:Gains-PnL
 
 2022-08-01 * "DCA into ETH"
-    Assets:Cash:Exchange-A                   -500.00 USD 
+    Assets:Cash:Exchange-A                   -500.00 USD
     Assets:Crypto:Tokens                        0.482 ETH {}
 
 ; Includes Fee
@@ -971,7 +963,7 @@ obligation to pay something back (book to liabilities):
 {: file='Main.beancount'}
 
 Now if you trade with those borrowed assets you can book them as normal, buying and selling
-different cryptos, tracking the cost basis etc. 
+different cryptos, tracking the cost basis etc.
 
 #### Repaying USD
 
@@ -1075,7 +1067,7 @@ circumstances.
 Unless your country has some type of wealth / property tax on merely having valuable assets only
 _realized_ gains are taxed. What this means is that if you buy a coin and it e.g. goes up 1000x over
 time turning your $ 10,000 investment into $ 10M  that $ 9.99M won't actually be taxable until you
-sell those coins for another or fiat. 
+sell those coins for another or fiat.
 
 > Don't try to avoid paying taxes by selling your coins for other coins, or spending the tokens
 > directly on goods or services via e.g. a crypto card because most jurisidictions count any

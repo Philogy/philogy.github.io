@@ -1,7 +1,7 @@
 ---
 title: "Beancount: DeFi Accounting For Noobs"
 date: 2023-10-01 20:45
-categories: []
+categories: [acounting, DeFi]
 tags: [DeFi, accounting, beancount]
 
 ---

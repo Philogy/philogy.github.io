@@ -3,6 +3,7 @@ title: "Quitting DeReg And What's Next"
 date: 2023-11-24 17:58
 categories: []
 tags: [personal]
+math: true
 
 ---
 

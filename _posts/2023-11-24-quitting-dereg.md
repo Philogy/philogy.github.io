@@ -50,6 +50,11 @@ stray and experiment and I definitely **shouldn't** lock myself in with new resp
 I'm sure about what I want to do. Overall I love my brother and am very happy our first lil' venture
 together had such an amicable ending. ❤️
 
+I'm also forever grateful to [libevm](https://twitter.com/libevm) a dear friend and our only
+investor. Their investment has been returned in full in <2 months with a 6% profit. Now I can
+proudly say that "my first venture ever resulted in a profit for all investors with an average
+annualized return of over 50%". 😂😏
+
 Jokes aside I thought I was sure about wanting to do a startup, I thought it was the best, logical
 next step. I still think I was right, but maybe not. Life is funny like that sometimes, no matter
 how hard you try to self-impose some grander vision and strict timeline onto yourself, sometimes you

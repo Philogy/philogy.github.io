@@ -93,7 +93,7 @@ the following criteria:
 - hard and somewhat diverse technical challenges
 - collaborative work environment
 - cracked teammates I can look up to and learn from
-- good pay (180k and up / yr)
+- good pay (210k and up / yr)
 
 While my main expertise is in low-level smart contract development and EVM security I'm a fast
 learner and very open to learning things I'm not already well-versed in such as:

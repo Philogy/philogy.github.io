@@ -15,7 +15,7 @@ You can see my full solution in my repo [here](https://github.com/Philogy/curta-
 
 ## Intro
 
-![ZSafe Challenge Structure](/assets/images/zSafe-challenge-structure.svg)
+![ZSafe Challenge Structure](/assets/images/zSafe-challenge-structure.png)
 
 The end goal is to have the `SafeCurta` puzzle contract's `verify` function evaluate `true` for your seed
 which is determined by `generate`. To do so it checks that your associated `SafeChallenge` factory
@@ -221,7 +221,7 @@ self-destructs on our behalf. Assuming we've set up the factory and create2 depl
 we can then re-deploy any code we'd like to the address that's now the implementation of the
 `SafeChallenge.proxy` contract:
 
-![Visualization of Malicious Upgrade Procedure](/assets/images/zSafe-malicious-upgrade.excalidraw.svg)
+![Visualization of Malicious Upgrade Procedure](/assets/images/zSafe-malicious-upgrade.excalidraw.png)
 
 ## Part 3: Passing the check itself
 

@@ -1,6 +1,6 @@
 ---
 title: "Curta CTF ZSafe Write-up"
-date: 2024-01-16 17:09
+date: 2024-01-18 10:07
 categories: [ctf-writeups]
 tags: [solidity, EVM, smart contracts, security]
 math: true

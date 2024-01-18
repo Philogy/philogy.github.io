@@ -1,7 +1,7 @@
 ---
 title: "Paradigm CTF 2022: Write-Up Collection"
 date: 2022-08-22 12:36
-categories: [security-write-ups]
+categories: [ctf-writeups]
 tags: [solidity, EVM, security, smart contracts]
 
 ---
@@ -14,14 +14,14 @@ I participated in the Paradigm CTF 2022 where I was personally able to solve 7 o
 Shout out to my team the [notfellows](https://twitter.com/notfellows)! 😄
 
 
-### Intro - General EVM Challenge Structure 
+### Intro - General EVM Challenge Structure
 For the 13 EVM related challenges (not counting 0xMonaco, underhanded 2022) the goal was to get the `Setup` contract's `isSolved` method to return `true`  so that the flag could be retrieved from the server. The contracts were deployed to a private chain which was forked off of mainnet. This is an important detail as not all contracts were provided by the CTF, some were just the mainnet contracts which you then had to look at on etherscan.
 
 ### Intro - Write-up Locations
 This post contains technical write-ups of the [Hint Finance]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#hint-finance-) and [Just In Time]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#just-in-time-jit-) challenges.
 
 Check out the [Glossary]({% post_url 2022-08-22-paradigm-ctf-2022-write-up-collection %}#glossary) for links to write-ups of other challenges.
- 
+
 
 ## Hint Finance 🚩
 
@@ -42,7 +42,7 @@ The vault contract was set up as a typical reward contract whereby you deposit s
 There were also a couple of methods related to rewards but I quickly realized that those were just distractions as you have no way of setting the reward tokens and all the configured reward tokens were not the actual target tokens you're looking to drain
 
 ### Hint Finance - Initial Ideas 🤔
-Initially I looked at the flashloan method trying to find a way to deposit/withdraw during the loan but due to its design I had to conclude that this was not possible. This is because the flashloan method enforces not only that the tokens be returned but also that the amount of total outstanding vault shares remain constant. This means you can't keep new shares, have existing shares be redeemed or otherwise mess with the share price besides increasing it by returning more tokens than necessary. 
+Initially I looked at the flashloan method trying to find a way to deposit/withdraw during the loan but due to its design I had to conclude that this was not possible. This is because the flashloan method enforces not only that the tokens be returned but also that the amount of total outstanding vault shares remain constant. This means you can't keep new shares, have existing shares be redeemed or otherwise mess with the share price besides increasing it by returning more tokens than necessary.
 
 ### Hint Finance - ERC777 Does It Again 😬
 After my initial look I remembered that the contracts are forked off mainnet and decided to check their code. There I discovered that 2 of the 3 target tokens were ERC777 tokens.
@@ -92,7 +92,7 @@ function withdraw(uint256 shares)
 
 Looking at the `deposit` method you only get control via the pre-transfer hook. This is not useful as the logic for updating the token balance and issuing new shares happens after the hook is complete, oustside of your control.
 
-The `withdraw` method is the jackpot however as you get the control-flow via the post-transfer hook, **after** the balance was changed but **before** your share balance is updated. Let's break it down with an example where we withdraw everything to illustrate: 
+The `withdraw` method is the jackpot however as you get the control-flow via the post-transfer hook, **after** the balance was changed but **before** your share balance is updated. Let's break it down with an example where we withdraw everything to illustrate:
 
 Step|Vault Balance|Your Balance|Total Shares|Your Shares|Share Price
 ---|---|---|---|---|---
@@ -173,7 +173,7 @@ function flashloan(
 ```
 
 The `flashloan` method calls the caller, not necessarily the token directly meaning we need the token to be the caller somehow and give the vault a specific payload. Thankfully we can just leverage `approveAndCall` again, approving the vault and calling the `flashloan` method.
- 
+
 There's a few more tricky bits I had to find out while debugging my exploit as the two colliding methods have different parameters. Let's breakdown the calldata that the vault creates when calling `onHintFinanceFlashloan`:
 ```
 cae9ca51 // selector
@@ -208,8 +208,8 @@ bytes memory innerPayload = abi.encodeWithSelector(
 	bytes4(0x00000000),
 	_sandVault,
 	bytes32(0),
-	bytes32(0), 
-	bytes32(0) 
+	bytes32(0),
+	bytes32(0)
 );
 ```
 The selector is `0x00000000` for simplicity so I add an empty fallback method to my exploit contract so it accepts the final call.
@@ -220,21 +220,21 @@ Finally I just nest the calls and use `transferFrom` to transfer the tokens out 
 The Hint Finance challenge reminds us that we should always be wary of external calls to user controllable addresses and that you should always assume that ERC20 tokens can reenter upon transfers, just like ETH.
 
 ## Just In Time (JIT) 🚩
-### JIT - Intro 
-In case you're just looking for the code here's the [**full script**](https://gist.github.com/Philogy/f4f48a29053344ce467c12ff62ebea8a) I wrote to solve the challenge. Considering that only 5 others solved it I am particularly proud of having solved this one. Especially since I really struggled with it: 
+### JIT - Intro
+In case you're just looking for the code here's the [**full script**](https://gist.github.com/Philogy/f4f48a29053344ce467c12ff62ebea8a) I wrote to solve the challenge. Considering that only 5 others solved it I am particularly proud of having solved this one. Especially since I really struggled with it:
 
-![Message from me "I spent half the day just staring at just-in-time sob emoji 😂😭", Georgios Konstantopoulos responds "lmao"](/assets/images/struggling-with-jit.png) 
+![Message from me "I spent half the day just staring at just-in-time sob emoji 😂😭", Georgios Konstantopoulos responds "lmao"](/assets/images/struggling-with-jit.png)
 
 But after an estimated ~16h of struggle my perceverance paid off and I managed to conquer the challenge!
 
-In the Just-In-Time challenge (referred to as JIT for the remainder) the condition for receiving the flag, was draining the provided `JIT` contract of ETH. The `JIT` contract performs some logic around a provided input `program`, compiling it to EVM bytecode, subsequently deploying it and then delegate calling it. 
+In the Just-In-Time challenge (referred to as JIT for the remainder) the condition for receiving the flag, was draining the provided `JIT` contract of ETH. The `JIT` contract performs some logic around a provided input `program`, compiling it to EVM bytecode, subsequently deploying it and then delegate calling it.
 
 > **`DELEGATECALL`**
 >
 > Unlike a normal call, when a contract delegate calls to another it gives it complete control allowing it to modify storage, emit events, call other contracts, transfer ETH and even self destruct on its behalf.
 >
 > While useful for libraries, proxies and complex patterns like [ERC-2535 Diamonds](https://eips.ethereum.org/EIPS/eip-2535), it can open up a lot of attack surface.
-> 
+>
 > For more details refer to [evm.codes](https://www.evm.codes/#f4) or the
 > [Ethereum Yellow Paper](https://ethereum.github.io/yellowpaper/paper.pdf)
 {: .prompt-tip}
@@ -242,16 +242,16 @@ In the Just-In-Time challenge (referred to as JIT for the remainder) the conditi
 ### JIT - Compiler Structure 🧱
 If we're going to give this JIT compiler a program that'll compile to malicious code we'll have to first understand it. Skimming over the contract and reading the comments we can identify 6 modules / steps:
 
-1. Loop finder: Finds and matches square-brackets `[]` 
+1. Loop finder: Finds and matches square-brackets `[]`
 2. Block finder: Based on the loops splits the program into discrete "blocks"  that can be jumped to
 3. Optimizer: Shortens repetitive / inefficient program segments
-4. Code generator: Generates the main meat of the code, translating jit symbols into EVM bytecode and keeping track of where blocks start and end in the bytecode. 
+4. Code generator: Generates the main meat of the code, translating jit symbols into EVM bytecode and keeping track of where blocks start and end in the bytecode.
 5. Label filler: Inserts the actual jump locations into the code.
 6. Deployer: Inserts the code length into the constructor, deploys and executes the code
 
 Side note: Looking at the basic set of symbols `[],.+-<>`, the "jit language"  seems to be a super set of [Brainfuck](https://en.wikipedia.org/wiki/Brainfuck), a minimalistic, turing complete language.
 
-### JIT - Desired Code 
+### JIT - Desired Code
 Before we trick the compiler into generating malicious code we need to ask ourselves what that code should look like so that we know what we're aiming for. There's a relatively small set of opcodes that would allow us to transfer out ETH: `CREATE` , `CALL`, `CALLCODE`, `DELEGATECALL`, `CREATE2` and `SELFDESTRUCT`.
 
 From all these operations `SELFDESTRUCT`  seems to be the best candidate as it only consumes 1 stack element and automatically transfers all ETH, especially useful considering how constrained the compiler is. The precise recipient is irrelevant as our sole win condition is to drain the compiler, making our goal: **have the code reach a `SELFDESTRUCT` opcode with at least 1 element on the stack**.
@@ -282,7 +282,7 @@ There are other compiler sections that insert custom bytes but only ever after `
 ### JIT - Breaking The Wrapper ⛏️
 Note that we can put **any** opcode in the wrapper as long as its byte value doesn't overlap with one of the recognized jit symbols (`[],.<>+-RLAS0#`), we can even insert a `PUSH` opcode into the wrapper. What's interesting about the `PUSH` opcode here is that it's not an isolated opcode, the bytes following a `PUSH` get pushed on the stack, so they're not interpreted as functional opcodes but data.
 
-While this still doesn't allows us to reach the code it does allow us to change the meaning of subsequent code. As an example imagine the following EVM code: 
+While this still doesn't allows us to reach the code it does allow us to change the meaning of subsequent code. As an example imagine the following EVM code:
 ```
 INVALID INVALID [SELFDESTRUCT] INVALID INVALID PUSH2 0x5bff
   de      ad          ff         be      ef     61    5bff
@@ -307,7 +307,7 @@ Thankfully we can insert a custom jump location by leveraging 3 bugs in the comp
 Matched square brackets are safe because when they're found their respective links are reset. However for unmatched square brackets the block finder still queries the `loops` mapping allowing us to use values set in previous calls.
 
 ### JIT - Tying It All Together 🎁
-Now that we know how to exploit the contract we need to implement the exploit, while it's relatively straight forward once you know how, getting the precise positions right is a bit finicky. 
+Now that we know how to exploit the contract we need to implement the exploit, while it's relatively straight forward once you know how, getting the precise positions right is a bit finicky.
 
 I started with the final program, inserting some padding `#` to ensure that I had enough space to set the necessary values in prior calls: `[################\x64S\x5b\xff`. I then compiled with JIT to see where the location of the critical `JUMPDEST` was. I then crafted 2 pieces of JIT code one setting the value in the `basicBlockAddrs` mapping and the other in `loops`. It's likely possible to do it in 1 instead of 2 pre-solution programs but for simplicity's sake I just did it in 2 as it was easier.
 
@@ -321,20 +321,20 @@ import "forge-std/Script.sol";
 
 import {Setup, JIT} from "src/public/contracts/Setup.sol";
 
-contract ExploitJIT is Script { 
-	function setUp() public {} 
-	
-	function run() public { 
+contract ExploitJIT is Script {
+	function setUp() public {}
+
+	function run() public {
 		vm.startBroadcast();
 		Setup s = Setup(vm.envAddress("SETUP_ADDR"));
 		JIT jit = s.TARGET();
-		
+
 		jit.invoke("[#######################]", "");
 		jit.invoke("########################[]", "");
 		jit.invoke("[################\x64S[\xff", "");
-		
-		vm.stopBroadcast(); 
-	} 
+
+		vm.stopBroadcast();
+	}
 }
 ```
 
@@ -364,7 +364,7 @@ write-ups. Challenges are sorted by total solves. Credit to [0xfoobar's thread](
 - ❌ [Trapdooor](https://twitter.com/elyx0/status/1561532604519747584)
 - ❌ Lockbox 2 ([Stage 4 & 5](https://twitter.com/brockjelmore/status/1561526932860153856))
 - ✅ [Vanity](https://twitter.com/danielvf/status/1561508004423471104)
-- ✅ Sourcecode 
+- ✅ Sourcecode
 - ✅ [Merkledrop](https://jeiwan.net/posts/my-paradigm-ctf-solutions/)
 - ✅ [Rescue](https://jeiwan.net/posts/my-paradigm-ctf-solutions/)
 - ✅ Random

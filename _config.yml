@@ -26,7 +26,7 @@ title: Philogy's blog                          # the main title
 tagline: My ideas, research and public journal    # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
-  Philippe Dumonet's blog covering blockchains, security, entrepreneurship and more
+  Philippe Dumonet's blog covering blockchains, compilers, security and more
 
 # fill in the protocol & hostname for your site, e.g., 'https://username.github.io'
 url: 'https://philogy.github.io'
@@ -42,7 +42,7 @@ social:
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
   name: Philippe Dumonet
   company: Dumonet Distributed Technologies UG
-  email: contact@dt-dumo.net             # change to your email address
+  email: philippe@dumo.net             # change to your email address
   links:
     # The first element serves as the copyright owner's link
     - /about

@@ -10,16 +10,22 @@ This is a write-up for the Curta CTF [ZSafe](https://www.curta.wtf/puzzle/base:5
 initially didn't submit a solution due to personal time constraints and [issues with foundry
 scripts](https://github.com/foundry-rs/foundry/issues/6825) that made it impossible to submit
 directly using them. Instead I committed to the solve on [Twitter](https://x.com/real_philogy/status/1747381887679484166).
+I did end up submitting landing me on [3rd](https://www.curta.wtf/puzzle/base:5/leaderboard),
+while I technically committed to the solution online before jinseo.eth came in 2nd I think
+it's not fair to claim that I was "truly" 2nd as with CTFs actually submitting and debugging the
+final details of your solution is often half the battle.
 
 You can see my full solution in my repo [here](https://github.com/Philogy/curta-zsafe-solution).
 
 ## Intro
 
-![ZSafe Challenge Structure](/assets/images/zSafe-challenge-structure.png)
-
 The end goal is to have the `SafeCurta` puzzle contract's `verify` function evaluate `true` for your seed
 which is determined by `generate`. To do so it checks that your associated `SafeChallenge` factory
-contract returns `isUnlocked`. This means our setup is:
+contract returns `isUnlocked`.
+
+![ZSafe Challenge Structure](/assets/images/zSafe-challenge-structure.png)
+
+Our setup is:
 
 1. Deploy the `SafeChallenge` contract
 2. Find a way to pass the checks in its `unlock` function to achieved the `isUnlocked: true` state.

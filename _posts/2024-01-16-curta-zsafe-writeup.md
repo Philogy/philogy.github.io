@@ -94,7 +94,7 @@ So our only path forward is to somehow manipulate the `proxy` with a custom impl
 ## Part 1: Bypassing the upgrade whitelist.
 
 To be able to manipulate how the proxy returns values for the `check` function you need to upgrade
-the proxy to code we control. However the whitelist only lets us change the implementatino to
+the proxy to code we control. However the whitelist only lets us change the implementation to
 a contract matching the code hash of the `SafeSecret` or `SafeSecretAdmin` contracts. However once
 the address is set the code is never revalidated, meaning if we are somehow able to change the code
 of a deployed contract in-place we can just upgrade the `proxy` to some "valid" code, change it and

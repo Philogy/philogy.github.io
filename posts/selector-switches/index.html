@@ -1,0 +1,913 @@
+<!DOCTYPE html><html lang="en" ><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"><meta name="generator" content="Jekyll v4.2.2" /><meta property="og:title" content="Constant Gas Function Dispatchers in the EVM" /><meta property="og:locale" content="en" /><meta name="description" content="Image: Telecom switchboard operator1 Joseph A. Carr, Attribution, via Wikimedia Commons &#8617;" /><meta property="og:description" content="Image: Telecom switchboard operator1 Joseph A. Carr, Attribution, via Wikimedia Commons &#8617;" /><link rel="canonical" href="https://philogy.github.io/posts/selector-switches/" /><meta property="og:url" content="https://philogy.github.io/posts/selector-switches/" /><meta property="og:site_name" content="Philogy’s blog" /><meta property="og:type" content="article" /><meta property="article:published_time" content="2022-03-16T18:55:00+01:00" /><meta name="twitter:card" content="summary" /><meta property="twitter:title" content="Constant Gas Function Dispatchers in the EVM" /><meta name="twitter:site" content="@real_philogy" /> <script type="application/ld+json"> {"@context":"https://schema.org","@type":"BlogPosting","dateModified":"2023-07-26T11:38:35+02:00","datePublished":"2022-03-16T18:55:00+01:00","description":"Image: Telecom switchboard operator1 Joseph A. Carr, Attribution, via Wikimedia Commons &#8617;","headline":"Constant Gas Function Dispatchers in the EVM","mainEntityOfPage":{"@type":"WebPage","@id":"https://philogy.github.io/posts/selector-switches/"},"url":"https://philogy.github.io/posts/selector-switches/"}</script><title>Constant Gas Function Dispatchers in the EVM | Philogy's blog</title><link rel="apple-touch-icon" sizes="180x180" href="/assets/img/favicons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="/assets/img/favicons/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="/assets/img/favicons/favicon-16x16.png"><link rel="manifest" href="/assets/img/favicons/site.webmanifest"><link rel="shortcut icon" href="/assets/img/favicons/favicon.ico"><meta name="apple-mobile-web-app-title" content="Philogy's blog"><meta name="application-name" content="Philogy's blog"><meta name="msapplication-TileColor" content="#da532c"><meta name="msapplication-config" content="/assets/img/favicons/browserconfig.xml"><meta name="theme-color" content="#ffffff"><link rel="stylesheet" href="/assets/lib/fonts/main.css"><link rel="stylesheet" href="/assets/lib/bootstrap-4.6.1/bootstrap.min.css"><link rel="stylesheet" href="/assets/lib/fontawesome-free-5.15.4/css/all.min.css"><link rel="stylesheet" href="/assets/css/style.css"><link rel="stylesheet" href="/assets/lib/bootstrap-toc-1.0.1/bootstrap-toc.min.css"><link rel="stylesheet" href="/assets/lib/magnific-popup-1.1.0/magnific-popup.css"> <script src="/assets/lib/jquery-3.6.0/jquery.min.js"></script> <script type="text/javascript"> class ModeToggle { static get MODE_KEY() { return "mode"; } static get MODE_ATTR() { return "data-mode"; } static get DARK_MODE() { return "dark"; } static get LIGHT_MODE() { return "light"; } static get ID() { return "mode-toggle"; } constructor() { if (this.hasMode) { if (this.isDarkMode) { if (!this.isSysDarkPrefer) { this.setDark(); } } else { if (this.isSysDarkPrefer) { this.setLight(); } } } let self = this; /* always follow the system prefers */ this.sysDarkPrefers.addEventListener("change", () => { if (self.hasMode) { if (self.isDarkMode) { if (!self.isSysDarkPrefer) { self.setDark(); } } else { if (self.isSysDarkPrefer) { self.setLight(); } } self.clearMode(); } self.notify(); }); } /* constructor() */ get sysDarkPrefers() { return window.matchMedia("(prefers-color-scheme: dark)"); } get isSysDarkPrefer() { return this.sysDarkPrefers.matches; } get isDarkMode() { return this.mode === ModeToggle.DARK_MODE; } get isLightMode() { return this.mode === ModeToggle.LIGHT_MODE; } get hasMode() { return this.mode != null; } get mode() { return sessionStorage.getItem(ModeToggle.MODE_KEY); } /* get the current mode on screen */ get modeStatus() { if (this.isDarkMode || (!this.hasMode && this.isSysDarkPrefer)) { return ModeToggle.DARK_MODE; } else { return ModeToggle.LIGHT_MODE; } } setDark() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.DARK_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.DARK_MODE); } setLight() { $('html').attr(ModeToggle.MODE_ATTR, ModeToggle.LIGHT_MODE); sessionStorage.setItem(ModeToggle.MODE_KEY, ModeToggle.LIGHT_MODE); } clearMode() { $('html').removeAttr(ModeToggle.MODE_ATTR); sessionStorage.removeItem(ModeToggle.MODE_KEY); } /* Notify another plugins that the theme mode has changed */ notify() { window.postMessage({ direction: ModeToggle.ID, message: this.modeStatus }, "*"); } } /* ModeToggle */ const toggle = new ModeToggle(); function flipMode() { if (toggle.hasMode) { if (toggle.isSysDarkPrefer) { if (toggle.isLightMode) { toggle.clearMode(); } else { toggle.setLight(); } } else { if (toggle.isDarkMode) { toggle.clearMode(); } else { toggle.setDark(); } } } else { if (toggle.isSysDarkPrefer) { toggle.setLight(); } else { toggle.setDark(); } } toggle.notify(); } /* flipMode() */ </script><body data-spy="scroll" data-target="#toc" data-topbar-visible="true"><div id="sidebar" class="d-flex flex-column align-items-end"><div class="profile-wrapper text-center"><div id="avatar"> <a href="/" class="mx-auto"> <img src="/assets/headshot.jpeg" alt="avatar" onerror="this.style.display='none'"> </a></div><div class="site-title mt-3"> <a href="/">Philogy's blog</a></div><div class="site-subtitle font-italic">Phil's ideas & research.</div></div><ul class="w-100"><li class="nav-item"> <a href="/" class="nav-link"> <i class="fa-fw fas fa-home ml-xl-3 mr-xl-3 unloaded"></i> <span>HOME</span> </a><li class="nav-item"> <a href="/categories/" class="nav-link"> <i class="fa-fw fas fa-stream ml-xl-3 mr-xl-3 unloaded"></i> <span>CATEGORIES</span> </a><li class="nav-item"> <a href="/tags/" class="nav-link"> <i class="fa-fw fas fa-tag ml-xl-3 mr-xl-3 unloaded"></i> <span>TAGS</span> </a><li class="nav-item"> <a href="/archives/" class="nav-link"> <i class="fa-fw fas fa-archive ml-xl-3 mr-xl-3 unloaded"></i> <span>ARCHIVES</span> </a><li class="nav-item"> <a href="/about/" class="nav-link"> <i class="fa-fw fas fa-info-circle ml-xl-3 mr-xl-3 unloaded"></i> <span>ABOUT</span> </a></ul><div class="sidebar-bottom mt-auto d-flex flex-wrap justify-content-center align-items-center"> <button class="mode-toggle btn" aria-label="Switch Mode"> <i class="fas fa-adjust"></i> </button> <span class="icon-border"></span> <a href="https://github.com/Philogy" aria-label="github" target="_blank" rel="noopener"> <i class="fab fa-github"></i> </a> <a href="https://twitter.com/real_philogy" aria-label="twitter" target="_blank" rel="noopener"> <i class="fab fa-twitter"></i> </a> <a href=" javascript:location.href = 'mailto:' + ['philippe','dumo.net'].join('@')" aria-label="email" > <i class="fas fa-envelope"></i> </a></div></div><div id="topbar-wrapper"><div id="topbar" class="container d-flex align-items-center justify-content-between h-100 pl-3 pr-3 pl-md-4 pr-md-4"> <span id="breadcrumb"> <span> <a href="/"> Home </a> </span> <span>Constant Gas Function Dispatchers in the EVM</span> </span> <i id="sidebar-trigger" class="fas fa-bars fa-fw"></i><div id="topbar-title"> Post</div><i id="search-trigger" class="fas fa-search fa-fw"></i> <span id="search-wrapper" class="align-items-center"> <i class="fas fa-search fa-fw"></i> <input class="form-control" id="search-input" type="search" aria-label="search" autocomplete="off" placeholder="Search..."> </span> <span id="search-cancel" >Cancel</span></div></div><div id="main-wrapper" class="d-flex justify-content-center"><div id="main" class="container pl-xl-4 pr-xl-4"><div class="row"><div id="core-wrapper" class="col-12 col-lg-11 col-xl-9 pr-xl-4"><div class="post pl-1 pr-1 pl-md-2 pr-md-2"><h1 data-toc-skip>Constant Gas Function Dispatchers in the EVM</h1><div class="post-meta text-muted"> <span> Posted <em class="" data-ts="1647453300" data-df="ll" data-toggle="tooltip" data-placement="bottom"> Mar 16, 2022 </em> </span> <span> Updated <em class="" data-ts="1690364315" data-df="ll" data-toggle="tooltip" data-placement="bottom"> Jul 26, 2023 </em> </span><div class="d-flex justify-content-between"> <span> By <em> <a href="/about">Philippe Dumonet</a> </em> </span><div> <span class="readtime" data-toggle="tooltip" data-placement="bottom" title="8094 words"> <em>44 min</em> read</span></div></div></div><div class="post-content"><p><img data-src="/assets/images/23-01-better-switches/switchboard-operator.jpg" alt="Switchboard operator" data-proofer-ignore> <em>Image: Telecom switchboard operator<sup id="fnref:1" role="doc-noteref"><a href="#fn:1" class="footnote" rel="footnote">1</a></sup></em></p><h2 id="intro"><span class="mr-2">Intro</span><a href="#intro" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>Every<sup id="fnref:2" role="doc-noteref"><a href="#fn:2" class="footnote" rel="footnote">2</a></sup> smart contract on Ethereum and other EVM chains starts with its function dispatcher. Function dispatchers tell the contract whether they’ve implemented the requested method and where the code for that method is found within the contract. I’ll also refer to function dispatchers as “selector switches” as they remind of Telecom switchboard operators and are similar to <code class="language-plaintext highlighter-rouge">switch</code>-statements of common programming languages.</p><p>Function dispatchers are executed upon every contract call meaning inefficiencies &amp; optimizations in this area of the code will impact all calls and the general gas efficiency of the contract. The most straightforward approaches to function dispatchers employed by high-level languages like Solidity and Vyper and even taught in the <a href="https://docs.huff.sh/tutorial/function-dispatching/#what-is-the-problem">Huff tutorial on function dispatching</a> are however not as optimal as they could be.</p><p>This post will look at the common approaches to function dispatchers and show more optimal versions you can apply to your low-level contracts. This post also assumes some familiarity with the EVM and its opcodes (low-level EVM instructions); if you need a quick intro I’d recommend <a href="https://docs.huff.sh/tutorial/evm-basics/#technical">Huff’s “Understanding the EVM” Tutorial section</a> as it gives a good overview of how the EVM works.</p><p>This post will look at different ways to build function dispatchers and the different tradeoffs I considered when I built the highly optimized function dispatcher for the improved Wrapped Ether implementation <a href="https://github.com/philogy/meth-weth">METH</a> that I’m working on.</p><h3 id="refresher-what-are-selectors"><span class="mr-2">Refresher: What Are Selectors?</span><a href="#refresher-what-are-selectors" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Selectors are standardized 4-byte identifiers used to identify methods across contracts. Function selectors are the left 4-bytes of the keccak hash of a function’s <em>signature</em>. Since the data types of the parameters are also hashed this allows contracts to differentiate between functions that have the same name but different sets of parameters like the <code class="language-plaintext highlighter-rouge">safeTransferFrom</code> methods in <a href="https://eips.ethereum.org/EIPS/eip-721">ERC721</a> tokens. One thing to watch out for is selector collisions, these can occur because the selector is only the first 4 bytes of the actual hash, they are quite rare however, occurring mainly in CTFs. You can see an example of vulnerability arising from a selector collision in my write-up of the <a href="/posts/paradigm-ctf-2022-write-up-collection/#hint-finance-">Paradigm CTF 2022 “Hint Finance” challenge</a>.</p><h4 id="selector-example"><span class="mr-2">Selector Example</span><a href="#selector-example" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p><strong>Function:</strong></p><div class="language-solidity highlighter-rouge"><div class="code-header"> <span data-label-text="Solidity"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre><span class="k">function</span> <span class="n">withdraw</span><span class="p">(</span><span class="kt">uint256</span> <span class="n">amount</span><span class="p">)</span> <span class="k">external</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+</pre></table></code></div></div><p><strong>Signature:</strong> <code class="language-plaintext highlighter-rouge">withdraw(uint256)</code></p><p><strong>Selector:</strong></p><p><code class="language-plaintext highlighter-rouge">keccak256("withdraw(uint256)")[0:4] =&gt;</code></p><p><strong><code class="language-plaintext highlighter-rouge">0x2e1a7d4d</code></strong><code class="language-plaintext highlighter-rouge">13322e7b96f9a57413e1525c250fb7a9021cf91d1540d5b69f16a49f =&gt;</code></p><p><code class="language-plaintext highlighter-rouge">0x2e1a7d4d</code></p><p><strong>Call to <code class="language-plaintext highlighter-rouge">withdraw(1e18)</code>:</strong></p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+</pre><td class="rouge-code"><pre>selector:      0x2e1a7d4d
+amount (1e18): 0x0000000000000000000000000000000000000000000000000de0b6b3a7640000
+----------------------------------------------------------------------------------------
+calldata:      0x2e1a7d4d0000000000000000000000000000000000000000000000000de0b6b3a7640000
+</pre></table></code></div></div><p>The precise specification of how selectors are defined and computed can be found in the <a href="https://docs.soliditylang.org/en/latest/abi-spec.html">Contract ABI Specification</a>, it specifies how arguments are encoded and some more precise details when it comes to actually computing the selector for different types.</p><blockquote class="prompt-tip"><div><p>If you’ve installed the <a href="https://book.getfoundry.sh/">foundry</a> smart contract development framework using <code class="language-plaintext highlighter-rouge">foundryup</code> you should have the <code class="language-plaintext highlighter-rouge">cast</code> tool installed which lets you easily get the selector of any method by running <a href="https://book.getfoundry.sh/reference/cast/cast-sig"><code class="language-plaintext highlighter-rouge">cast sig &lt;your function&gt;</code></a> e.g. <code class="language-plaintext highlighter-rouge">cast sig "withdraw(uint)"</code> results in <code class="language-plaintext highlighter-rouge">0x2e1a7d4d</code></p></div></blockquote><p>Having a common standard for selectors is extremely useful as it lets different contracts easily interact with each other without having to look up and implement some custom data and function encoding scheme for every contract. It also allows higher-level languages to offer some abstraction in the form of public / external methods.</p><h3 id="micro-huff-crashcourse"><span class="mr-2">Micro Huff Crashcourse</span><a href="#micro-huff-crashcourse" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Since I’ll be denoting opcode snippets using Huff in this post I’ll do an extremely brief intro to Huff, you can find a full list of Huff’s features here: <a href="https://docs.huff.sh/get-started/huff-by-example/">docs.huff.sh/get-started/huff-by-example/</a>.</p><p><strong>What is Huff?:</strong> Huff is a low-level assembly language for the EVM, it’s basically just <em>mnemonic bytecode</em> (bytecode but written as aliases “SLOAD”, “DUP1” rather than the byte values) with some syntactic sugar around selectors, constants and jump destinations to improve the developer experience.</p><p><strong>Opcodes:</strong> Opcodes in Huff are written in their <em>mnemonic</em> i.e. “word form” and can be upper / lower case. The only exceptions are the <code class="language-plaintext highlighter-rouge">PUSH1</code> - <code class="language-plaintext highlighter-rouge">PUSH32</code> opcodes. For these, the values can be written directly in hexadecimal and the compiler will find the shortest fitting push opcodes for them e.g. <code class="language-plaintext highlighter-rouge">0x3212</code> compiles to <code class="language-plaintext highlighter-rouge">PUSH2 0x3213</code> (<code class="language-plaintext highlighter-rouge">0x613213</code>). Huff also allows for constants which are defined by <code class="language-plaintext highlighter-rouge">#define constant CONSTANT_NAME = 0x&lt;constant value&gt;</code> and are referenced by square brackets e.g. <code class="language-plaintext highlighter-rouge">[PERMIT_TYPEHASH]</code> and are also compiled to <code class="language-plaintext highlighter-rouge">PUSH</code> opcodes.</p><p><strong>Jump Labels &amp; Destinations:</strong> Jump labels are a convenient way to manage jumps without having to manually recalculate all destinations every time a bit of code is changed. Destinations are defined by <code class="language-plaintext highlighter-rouge">&lt;name_of_label&gt;:</code> e.g. <code class="language-plaintext highlighter-rouge">withdraw_start:</code>, the compiler will insert the 1-byte <code class="language-plaintext highlighter-rouge">JUMPDEST</code> opcode at all labels, whether they’re referenced or not. Jump destinations can be pushed to the stack by just writing their label: <code class="language-plaintext highlighter-rouge">withdraw_start</code>, Huff will currently always use a <code class="language-plaintext highlighter-rouge">PUSH2</code> opcode even if the destination only requires 1 byte.</p><p><strong>Macros:</strong> Macros are kind of like functions in higher-level languages. They’re bits of code you can reuse and are inserted inline by the compiler whenever referenced. They can also have static arguments which are also inserted at compile time. Within the macro, static arguments are referenced by angled brackets and the name of the argument e.g. <code class="language-plaintext highlighter-rouge">&lt;zero&gt;</code>. Macro arguments can be static values, jump labels or opcodes.</p><p><strong>Other features:</strong> Huff has a few other features like <code class="language-plaintext highlighter-rouge">fn</code> macros, tables, helper functions and even a way to define tests but I won’t be using most of them for this post outside of tables which I’ll introduce once we start using them. You can check out the extra features with the above link to Huff’s “Huff by example” section.</p><blockquote class="prompt-info"><div><p>Because Huff is so essentially mnemonic opcodes with bells and whistles I’ll also be using it to illustrate theoretical compiler output in a more human-readable way.</p></div></blockquote><h2 id="common-function-dispatchers"><span class="mr-2">Common Function Dispatchers</span><a href="#common-function-dispatchers" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>The goal of a function dispatcher is to:</p><ol><li>Load the selector from calldata<li>Reverts for non-matching selectors<li>Jump to the section of bytecode that executes the logic for that function</ol><h3 id="linear-if-else-dispatcher"><span class="mr-2">Linear If-Else Dispatcher</span><a href="#linear-if-else-dispatcher" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>“Linear If-Else Dispatcher” are the most straightforward and common dispatcher, generated by Solidity, Vyper and even presented in Huff’s tutorial. While the precise structure and opcodes used between the languages differ, an efficient Huff implementation and very similar to actual output from the Solidity compiler could look something like this:</p><div file="If-Else-Dispatcher.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="If-Else-Dispatcher.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+</pre><td class="rouge-code"><pre>/*loads bytes 0-31 of calldata and shifts right by 28 bytes to get the 4-byte selector
+(28 bytes = 28 * 8 bits = 0xe0 in hexadecimal)*/
+// In Huff it's a common convention to denote the state of the stack in a comment on every line
+0x0 calldataload 0xe0 shr // [call_selector] 
+
+// 1st If-Else Block
+// Copy selector from stack
+dup1                      // [call_selector, call_selector]
+// Place selector on stack
+0x01020304                // [function_selector, call_selector, call_selector]
+// Compare, are they eq-ual?
+eq                        // [function_selector == call_selector, call_selector]
+// Place function destination on stack in case they match
+function1_dest            // [function_dest, function_selector == call_selector, call_selector]
+// Conditional jump, will jump if the result from `eq` was true (1)
+jumpi                     // [call_selector]
+// If selectors didn't match `jumpi` will not jump and the code will continue here
+
+// Next if-else blocks
+dup1 0x05060708 eq function2_dest jumpi
+dup1 0x11223344 eq function2_dest jumpi
+...
+
+// if no match just revert
+0x0 0x0 revert
+</pre></table></code></div></div><p>Shown as a diagram the control flow progresses step by step through every else-if “block” until a matching selector is identified or the end of the switch is reached, in which case it results in a revert:</p><p><img data-src="/assets/images/23-01-better-switches/linear-switch.svg" alt="Linear If-Else Switch Flow Chart" data-proofer-ignore></p><p>This approach makes for a decent selector switch, it can easily be generated for any contract regardless of its selector set and count and fulfils our requirements of a selector:</p><ol><li>It loads the selector from calldata<li>Reverts if nothing matched<li>It does a direct comparison with all selectors until it finds one, won’t jump unless there’s a 1:1 match</ol><p>However, this approach is far from efficient because the average gas use (assuming the functions are randomly ordered in the switch and all used equally) grows linearly with the number of functions. Assuming we’re considering the gas use as run-time complexity this would have a time complexity of $O(n)$ in classic CS big-O notation. This is fine and quite efficient for contracts with ~3-6 functions but quickly loses ground to alternative approaches as the number of functions grows.</p><p><strong>Usage based optimization:</strong></p><p>Without changing the fundamental approach we can optimize the average gas use by reordering the switch, putting more commonly used functions first. This will allow common calls to go through fewer if-else blocks to find their match, improving average gas performance. The problem with this optimization is that there’s no real way to tell the compilers of high-level languages like Solidity / Vyper your selector-order preference and you need to anticipate the average use of your contract which can be tricky. A practical example of this is in SeaPort, where a function name was mined such that its selector was <code class="language-plaintext highlighter-rouge">0x00000000</code> and therefore placed earlier in the function dispatcher.<sup id="fnref:3" role="doc-noteref"><a href="#fn:3" class="footnote" rel="footnote">3</a></sup></p><h3 id="binary-search-distpachers"><span class="mr-2">Binary Search Distpachers</span><a href="#binary-search-distpachers" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>The binary search based selector switch is much more efficient than the simpler linear else-if switch for contracts with more functions. This is achieved by structuring the switch like a binary search tree, eliminating half the possible selectors at every step. This makes the time complexity logarithmic, $O(\log n)$:</p><p><img data-src="/assets/images/23-01-better-switches/binary-tree-switch-small.svg" alt="Linear If-Else Switch Flow Chart" data-proofer-ignore></p><p>Intuitively we can see that the average gas cost of reaching any given method in the contract grows logarithmically relative to the number of selectors because we can double the number of supported selectors while just adding a constant size step on the path to every selector:</p><p><img data-src="/assets/images/23-01-better-switches/binary-tree-switch-big.svg" alt="Linear If-Else Switch Flow Chart" data-proofer-ignore></p><p><em>(click to expand)</em></p><p>Instead of 2 x “Split” and 1x “If-Else” branches, you need to traverse 3x “Split” and 1x “If-Else” branch to reach any given function. If the amount of functions is not a power of 2 the tree approach will still work but the number of branches required to reach a given function will vary.</p><p>But how does it work exactly? How are you able to eliminate half the possible functions at every step?</p><p>Like a binary search tree for integers, you can create one for the selectors of the functions and then compare them with some middle value at every node. This is possible because the EVM has no notion of datatypes, it doesn’t differentiate between strings, unsigned integers, signed integers, booleans, selectors or jump labels. To the EVM opcodes, all values on the stack are 256-bit words, that can be added, subtracted and compared, against each other. To create our selector binary search tree we first need to interpret the 4-byte selectors as integers and sort them:</p><div file="METH-WETH Selectors" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="METH-WETH Selectors"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+</pre><td class="rouge-code"><pre>0x06fdde03 // name()
+0x095ea7b3 // approve(address,uint256)
+0x18160ddd // totalSupply()
+0x205c2878 // withdrawTo(address, uint256)
+0x23b872dd // transferFrom(address,address,uint256)
+0x2e1a7d4d // withdraw(uint256)
+0x313ce567 // decimals()
+0x3644e515 // DOMAIN_SEPARATOR()
+0x4a4089cc // withdrawFromTo(address, address, uint256)
+0x70a08231 // balanceOf(address)
+0x7ecebe00 // nonces(address)
+0x87f8ab26 // depositAmount(uint256)
+0x9470b0bd // withdrawFrom(address, uint256)
+0x95d89b41 // symbol()
+0xa9059cbb // transfer(address, uint256)
+0xac9650d8 // multicall(bytes[])
+0xb2069e40 // depositAmountTo(address, uint256)
+0xb760faf9 // depositTo(address)
+0xd0e30db0 // deposit()
+0xd505accf // permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
+0xdd62ed3e // allowance(address, address)
+</pre></table></code></div></div><p>You then continuously split the list of selectors in halves, saving the midpoints as you go along, so that you can construct the tree:</p><div file="METH-WETH Selector Splits" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="METH-WETH Selector Splits"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+</pre><td class="rouge-code"><pre>      0x06fdde03 // name()
+      0x095ea7b3 // approve(address,uint256)
+    &lt;---- Split 1_1_1 0x10000000
+        0x18160ddd // totalSupply()
+        0x205c2878 // withdrawTo(address, uint256)
+      &lt;---- Split 1_1_1_2 0x23000000
+        0x23b872dd // transferFrom(address, address, uint256)
+        0x2e1a7d4d // withdraw(uint256)
+  &lt;---- Split 1_1 0x30000000
+      0x313ce567 // decimals()
+      0x3644e515 // DOMAIN_SEPARATOR()
+    &lt;---- Split 1_1_2 0x40000000
+      0x4a4089cc // withdrawFromTo(address, address, uint256)
+      0x70a08231 // balanceOf(address)
+      0x7ecebe00 // nonces(address)
+&lt;---- Split 1 0x80000000
+      0x87f8ab26 // depositAmount(uint256)
+      0x9470b0bd // withdrawFrom(address, uint256)
+    &lt;---- Split 1_2_1 0x95000000
+      0x95d89b41 // symbol()
+      0xa9059cbb // transfer(address, uint256)
+      0xac9650d8 // multicall(bytes[])
+  &lt;---- Split 1_2 0xb0000000
+      0xb2069e40 // depositAmountTo(address, uint256)
+      0xb760faf9 // depositTo(address)
+    &lt;---- Split 1_2_2 0xc0000000
+      0xd0e30db0 // deposit()
+      0xd505accf // permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
+      0xdd62ed3e // allowance(address, address)
+</pre></table></code></div></div><p>The code then compares the selector to the mid value to see if it should jump left or right at every point:</p><blockquote class="prompt-tip"><div><p><strong>Smol Optimization Tip</strong></p><p>Depending on the context within the code you can save gas by replacing <code class="language-plaintext highlighter-rouge">0x00</code> (which compiles to <code class="language-plaintext highlighter-rouge">PUSH1 0x00</code> and costs 3 gas) with other opcodes that cost 2 gas and return <code class="language-plaintext highlighter-rouge">0x00</code>:</p><ul><li><code class="language-plaintext highlighter-rouge">PC</code> (program counter): Returns 0 if it’s the very first byte of your contract<li><code class="language-plaintext highlighter-rouge">RETURNDATASIZE</code>: Returns 0 until your contract has called another contract and the return / revert data was at least 1 byte long at which point it’ll return the length in bytes of that returned data<li><code class="language-plaintext highlighter-rouge">CALLVALUE</code>: Returns 0 if no ETH was sent along with the call, if you’ve already done a call value check (<code class="language-plaintext highlighter-rouge">assert(msg.value == 0)</code>) you can rely on the <code class="language-plaintext highlighter-rouge">CALLVALUE</code> opcode to always return <code class="language-plaintext highlighter-rouge">0</code> until the end of the call.<li><code class="language-plaintext highlighter-rouge">MSIZE</code> (memory size): Returns 0 as long as you haven’t used memory yet</ul><p>Note that this is no longer necessary on chains with the Shanghai upgrade as you can just use the <code class="language-plaintext highlighter-rouge">PUSH0</code> opcode which will always cost 2 gas and push 0 onto the stack regardless of context.</p></div></blockquote><div file="Binary Tree Switch.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Binary Tree Switch.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87
+88
+89
+90
+91
+92
+93
+94
+</pre><td class="rouge-code"><pre>// -- Get 4 byte selector
+pc calldataload 0xe0 shr     // [selector]
+
+// -- Split 1
+// Copy selector
+dup1                         // [selector, selector]
+// Push split value of split 1
+0x80000000                   // [split_1_val, selector, selector]
+// Compare selector to split value.
+lt                           // [split_1_val &lt; selector, selector]
+// Prepare split 1_2 dest in case branching off.
+split_dest_1_2               // [split_dest_1_2, split_1_val &lt; selector, selector]
+// Jump to split 1_2 if comparison succeeded
+jumpi                       // [selector]
+
+  // Split 1_1
+  dup1 0x30000000 lt split_dest_1_1_2 jumpi
+    // Split 1_1_1
+
+    dup1 0x10000000 lt split_dest_1_1_1_2 jumpi
+      // Split 1_1_1_1
+
+      dup1 0x06fdde03 eq name_dest    jumpi
+      dup1 0x095ea7b3 eq approve_dest jumpi
+      returndatasize returndatasize revert
+
+    split_dest_1_1_1_2:
+      // Split 1_1_1_2
+
+      dup1 0x23000000 lt split_dest_1_1_1_2_2 jumpi
+        // Split 1_1_1_2_1
+
+        dup1 0x18160ddd eq totalSupply_dest jumpi
+        dup1 0x205c2878 eq withdrawTo_dest  jumpi
+        returndatasize returndatasize revert
+
+      split_dest_1_1_1_2_2:
+        // Split 1_1_1_2_2
+
+        dup1 0x23b872dd eq transferFrom_dest jumpi
+        dup1 0x2e1a7d4d eq withdraw_dest     jumpi
+        returndatasize returndatasize revert
+
+  split_dest_1_1_2:
+    // Split 1_1_2
+
+    dup1 0x40000000 lt split_dest_1_1_2_2 jumpi
+      // Split 1_1_2_1
+
+      dup1 0x313ce567 eq decimals_dest         jumpi
+      dup1 0x3644e515 eq DOMAIN_SEPARATOR_dest jumpi
+      returndatasize returndatasize revert
+
+    split_dest_1_1_2_2:
+      // Split 1_1_2_2
+
+      dup1 0x4a4089cc eq withdrawFromTo_dest jumpi
+      dup1 0x70a08231 eq balanceOf_dest      jumpi
+      dup1 0x7ecebe00 eq nonces_dest         jumpi
+      returndatasize returndatasize revert
+
+split_dest_1_2:
+  // Split 1_2
+  dup1 0xb0000000 lt split_dest_1_2_2 jumpi
+    // Split 1_2_1
+
+    dup1 0x95000000 lt split_dest_1_2_1_2 jumpi
+      // Split 1_2_1_1
+      dup1 0x87f8ab26 eq depositAmount_dest jumpi
+      dup1 0x9470b0bd eq withdrawFrom_dest  jumpi
+      returndatasize returndatasize revert
+
+    split_dest_1_2_1_2:
+      // Split 1_2_1_2
+      dup1 0x95d89b41 eq symbol_dest    jumpi
+      dup1 0xa9059cbb eq transfer_dest  jumpi
+      dup1 0xac9650d8 eq multicall_dest jumpi
+      returndatasize returndatasize revert
+
+  split_dest_1_2_2:
+    // Split 1_2_2
+
+    dup1 0xc0000000 lt split_dest_1_2_2_2 jumpi
+      // Split 1_2_2_1
+      dup1 0xb2069e40 eq depositAmountTo_dest jumpi
+      dup1 0xb760faf9 eq depositTo_dest       jumpi
+      returndatasize returndatasize revert
+
+    split_dest_1_2_2_2:
+      // Split 1_2_2_2
+      dup1 0xd0e30db0 eq deposit_dest   jumpi
+      dup1 0xd505accf eq permit_dest    jumpi
+      dup1 0xdd62ed3e eq allowance_dest jumpi
+      returndatasize returndatasize revert
+</pre></table></code></div></div><p>Unlike the diagram, you’ll notice that I didn’t create split branches all the way down, but instead put small linear switches at the end once only 2-3 functions were left in the split. This is because a split branch can only cut the range of selectors in half but cannot confirm whether the selector matches exactly, you need a directly comparing “if-else” branch at the end of your tree. If you split your selectors until each split only contains 1 selector the last split is redundant:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+</pre><td class="rouge-code"><pre>// Split branch cost:   22 (+1 for jump dest on the `_2` branch)
+// If-else branch cost: 22
+
+// Split until only 1 Selector left
+
+split_dest_x:
+  dup1 0xd2000000 lt split_dest_x_2 jumpi
+      // Split x_2
+    dup1 0xd0e30db0 eq deposit_dest jumpi (y + 44 gas to reach)
+  split_dest_x_2:
+    // Split x_2
+    dup1 0xd505accf eq permit_dest  jumpi (y + 45 gas to reach, includes 1 gas for `JUMPDEST`)
+
+// Linear if-else for 2 functions:
+
+split_dest_x:
+  dup1 0xd0e30db0 eq deposit_dest jumpi (y + 22 gas to reach)
+  dup1 0xd505accf eq permit_dest  jumpi (y + 44 gas to reach)
+
+</pre></table></code></div></div><p>Similar reasoning applies to a split with 3 selectors. Further splitting a split with 3 selectors left turns the cost of (22, 44, 66) =&gt; (45, 66, 67). In fact, if you take the average gas use of the different selectors it doesn’t even make sense to break up a split containing 4 selectors: (22, 44, 66, 88; avg: 55) =&gt; (44, 66, 45, 67; avg: 55,5). Meaning that my example is not even a perfectly optimal binary search switch.</p><p>The Solidity compiler will automatically create such binary search switches once you have sufficient functions to justify the cost. Unfortunately, this is where we meet the limits of existing high-level compilers in terms of selector switch generation, to squeeze more gas out of our contracts we must dive deeper, into the dark depth of opcode-level optimization, but don’t worry it’s less intimidating than it sounds.</p><h2 id="constant-gas-switches"><span class="mr-2">⚡Constant Gas Switches</span><a href="#constant-gas-switches" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>Considering that the generated binary search switches are already optimal in terms of opcode use we need a completely different approach if we’re going to improve the gas cost of existing selector switches. To do that we’ll target the theoretically optimal time complexity of $O(1)$ meaning the cost of our selector switch doesn’t grow at all relative to the number of selectors.</p><p>While $O(1)$ is theoretically optimal we’ll also have to make sure the constant amount of gas used is actually cheaper than an alternative binary search or linear if-else switch. This is important because a naive $O(1)$ switch would e.g. be to store all jump destinations of the different functions in storage <code class="language-plaintext highlighter-rouge">mapping</code>-type data structure and load them when the contract gets executed, while this would use a constant amount of gas regardless of how many functions you have because it only needs a single <code class="language-plaintext highlighter-rouge">SLOAD</code>, the cost of that operation (2100) would make it more expensive than nearly any alternative.</p><h3 id="-base-cost"><span class="mr-2">🧱 Base Cost</span><a href="#-base-cost" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Whenever I work on gas optimization I like to determine or at least approximate how efficient a solution could theoretically be. For gas cost this is usually down to what you need the code to do and what you’re working with. In general, when building a selector switch there are two pieces that cannot be avoided:</p><ol><li>Isolating the selector from calldata: <code class="language-plaintext highlighter-rouge">&lt;zero push&gt; calldataload</code> + [<code class="language-plaintext highlighter-rouge">PUSH1 0xe0 SHR</code> / <code class="language-plaintext highlighter-rouge">PUSH32 0xffffffff00000000000000000000000000000000000000000000000000000000 AND</code>] (11 gas, assuming the zero-push is a 2 gas opcode such as <code class="language-plaintext highlighter-rouge">PC</code>, <code class="language-plaintext highlighter-rouge">RETURNDATASIZE</code> or <code class="language-plaintext highlighter-rouge">PUSH0</code> itself)<li>Checking if the selector is an exact match: <code class="language-plaintext highlighter-rouge">PUSH4 &lt;expected_selector&gt;</code> [<code class="language-plaintext highlighter-rouge">eq</code> / <code class="language-plaintext highlighter-rouge">sub</code>] <code class="language-plaintext highlighter-rouge">PUSH1/2 &lt;code / revert dest&gt; JUMPI</code> (19 gas)</ol><p>So we can confidently say that no ABI compliant selector switch, that reverts upon unmatching selectors can cost less than 30 gas. In fact, exactly 30 gas is possible when your contract has exactly 1 selector:</p><div file="single-function-switch.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="single-function-switch.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+</pre><td class="rouge-code"><pre>// Load selector
+pc calldataload 0xe0 shr
+
+// Use subtraction opcode `SUB` as "not equals" comparison. If selectors don't match
+// subtraction result will be non-zero and cause `JUMPI` to jump to the revert
+&lt;single_selector&gt; sub no_match_error jumpi
+
+// Huff macro that will insert the function's code
+SINGLE_FUNCTION()
+
+no_match_error:
+  returndatasize returndatasize revert // pushes 2 zeros and then reverts
+
+</pre></table></code></div></div><h3 id="constant-lookup-data-structures"><span class="mr-2">Constant-lookup Data Structures</span><a href="#constant-lookup-data-structures" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>When it comes to looking up data based on some key in constant time the two main data structures that come to mind are arrays and hash maps. Since the EVM does not offer a native map / array opcode (<a href="https://eips.ethereum.org/EIPS/eip-4200">yet</a>), we’ll look at different ways we can build these data structures using the building blocks provided by the EVM.</p><h3 id="selector-indexing"><span class="mr-2">Selector Indexing</span><a href="#selector-indexing" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Considering that jump labels are 2 bytes large and selectors are 4-byte (32-bit) large values that would require an 8.5GB array or map (<code class="language-plaintext highlighter-rouge">2 ** 32 * 2</code>) so that every single selector can be mapped to a unique jump label. To reduce the size of our lookup table and make it fit into the <a href="https://eips.ethereum.org/EIPS/eip-170">24kB Spurious Dragon contract size limit</a> we’ll need to extract an index that sits in a smaller range, however, this means that different selectors will result in the same index. This is why the final, 19-gas direct selector comparison is necessary as we need to rule out collisions to make sure that when our contract is called with a selector that’s not part of the ABI it’ll actually revert:</p><p><img data-src="/assets/images/23-01-better-switches/lookup-switch.png" alt="Lookup switch" data-proofer-ignore></p><p>There are different ways to extract a unique index from the 4-byte selector:</p><h4 id="hashing"><span class="mr-2">Hashing</span><a href="#hashing" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>Hashing is the most general-purpose way to map a set of selectors to a unique set of indices in a tight range. One just needs to search for a nonce that when hashed together with the selector results in a unique index (mod n). While it may require some longer searching for larger selector sets the search time can be reduced by increasing the accepted output range for indices. Code for such an index extractor would look something like this:</p><div file="Hash Selector Indexer.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Hash Selector Indexer.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+</pre><td class="rouge-code"><pre>// Gets selector.
+pc calldataload 0xe0 shr  // [selector]
+
+// Combine nonce with selector, `nonce` should be a number shifted left by 32 to ensure
+// it doesn't overlap with the actual selector.
+dup1 [NONCE] or           // [hash_preimage, selector]
+// Store in memory for hashing.
+msize mstore              // [selector]
+msize returndatasize sha3 // [hash, selector]
+[MASK] and                // [index, selector]
+
+</pre></table></code></div></div><p>While this approach is quite general-purpose it’s not very efficient. With the required memory and <code class="language-plaintext highlighter-rouge">SHA3</code> opcode use it brings the base cost of this approach to 93 gas, not including the code to do the table lookup. Meaning it’ll only really pay off when your contract starts to have &gt;25 (or &gt;40) functions, depending on the type of lookup table you’re using.</p><p>That’s why as an alternative to hashing it can be cheaper to make a custom “hashing function” that condenses the selector to an index by combining bitwise-xor, bit-shifting and modulus operations in a more creative fashion. Either approach will require you to iterate through many combinations to find the most efficient setup.</p><p>However, if you’re lucky and your selector set is smaller you can also use one of the following, more efficient selector indexing approaches:</p><h4 id="direct-bit-masking"><span class="mr-2">Direct Bit-Masking</span><a href="#direct-bit-masking" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>Looking at the selectors of the functions in your ABI as 32-bit binary values you can look to identify a set of bit positions across a tight range that are unique to all selectors e.g.:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+</pre><td class="rouge-code"><pre>               xx   xxx
+[0x06fdde03] 00000110111111011101111000000011 - {00___011} name()
+[0x95d89b41] 10010101110110001001101101000001 - {01___111} symbol()
+[0x313ce567] 00110001001111001110010101100111 - {11___100} decimals()
+[0x18160ddd] 00011000000101100000110111011101 - {01___000} totalSupply()
+[0x23b872dd] 00100011101110000111001011011101 - {10___110} transferFrom(address,address,uint256)
+[0xa9059cbb] 10101001000001011001110010111011 - {10___100} transfer(address, uint256)
+[0x70a08231] 01110000101000001000001000110001 - {11___010} balanceOf(address)
+[0x095ea7b3] 00001001010111101010011110110011 - {00___101} approve(address,uint256)
+[0xdd62ed3e] 11011101011000101110110100111110 - {01___101} allowance(address, address)
+[0xd0e30db0] 11010000111000110000110110110000 - {01___011} deposit()
+[0xb760faf9] 10110111011000001111101011111001 - {11___101} depositTo(address)
+[0x2e1a7d4d] 00101110000110100111110101001101 - {10___000} withdraw(uint256)
+[0x853828b6] 10000101001110000010100010110110 - {00___100} withdrawAll()
+[0xca9add8f] 11001010100110101101110110001111 - {00___010} withdrawAllTo(address)
+[0x205c2878] 00100000010111000010100001111000 - {10___001} withdrawTo(address, uint256)
+[0x9470b0bd] 10010100011100001011000010111101 - {01___001} withdrawFrom(address, uint256)
+[0x4a4089cc] 01001010010000001000100111001100 - {00___001} withdrawFromTo(address, address, uint256)
+[0x3644e515] 00110110010001001110010100010101 - {11___001} DOMAIN_SEPARATOR()
+[0x7ecebe00] 01111110110011101011111000000000 - {11___011} nonces(address)
+[0xd505accf] 11010101000001011010110011001111 - {01___100} permit(address, address, uint256, uint256, uint8, bytes32, bytes32)
+[0xac9650d8] 10101100100101100101000011011000 - {10___010} multicall(bytes[])
+
+</pre></table></code></div></div><p>In the above example, there’s a set of 5-bits in an 8-bit range that are unique across all selectors. The tight range is ideal as it means the range of values between the lowest and highest index is not so wide and the table in our contract can therefore be smaller. Extracting the index from a selector would require the operator <code class="language-plaintext highlighter-rouge">(selector &gt;&gt; MAGIC_SHIFT) &amp; MAGIC_MASK</code> which for the above example would be <code class="language-plaintext highlighter-rouge">(selector &gt;&gt; 22) &amp; 0xc7</code>. In Huff:</p><div file="Index Extractor.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Index Extractor.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+</pre><td class="rouge-code"><pre>// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+
+// Selector copied onto stack because it would be needed for direct comparison later
+dup1                     // [selector; selector]
+0x16 shr 0xc7 and        // [index ∈ (0x00,0xff); selector ]
+
+</pre></table></code></div></div><h4 id="bit-splicing"><span class="mr-2">Bit Splicing</span><a href="#bit-splicing" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>While there will always be a set of bit indices that are unique across all selectors they may not always be across a tight range, in fact, it becomes increasingly less likely as the number of functions in your contract increases. This presents an issue as the resulting index needs to be in a tight range for the table size to be practical. However, there are a few tricks you can use to bring bits together that aren’t close to each other.</p><p>As an example let’s Imagine you have an ABI such that the set of unique bits across all selectors looks as follows (marked by <code class="language-plaintext highlighter-rouge">X</code>):</p><p><code class="language-plaintext highlighter-rouge">0 0 0 0 0 0 0 0 X X X X 0 0 0 0 0 0 0 0 0 0 0 X 0 X 0 0 0 0 0 0</code></p><p>Extracted with the code: <code class="language-plaintext highlighter-rouge">SELECTOR() 0x6 shr 0x3c005 and</code>, representing a range of 18 bits. However, we can add a few simple operations to close the gap between the upper bits and the lower bits. By shifting and then bitwise OR-ing the values together we can create a resulting index that will always be in a smaller range:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre>Initially extracted: A B C D 0 0 0 0 0 0 0 0 0 0 0 E 0 F
+Shifted right by 11: 0 0 0 0 0 0 0 0 0 0 0 A B C D 0 0 0
+--------------------------------------------------------
+OR-ed together     : A B C D 0 0 0 0 0 0 0 A B C D E 0 F
+Lower bits masked  : 0 0 0 0 0 0 0 0 0 0 0 A B C D E 0 F
+</pre></table></code></div></div><p>With just 3 operations (shift, or, and) we reduced the range of the resulting index while keeping the unique bits, in Huff this would look like this (0xb is 11 in hexadecimal):</p><div file="Simple Bit Splicer in Huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Simple Bit Splicer in Huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+</pre><td class="rouge-code"><pre>// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+dup1 0x6 shr 0x3c005 and // [wide_index, selector]
+
+dup1 0xb shr             // [shifted_top_bits, wide_index, selector]
+or 0x7f and              // [narrow_index, selector]
+</pre></table></code></div></div><p>This is quite efficient as it doesn’t use a lot of opcodes and they’re all base-2 operations (bit-wise OR, bit-shift, bit-wise AND) which cost 3 gas vs. other arithmetic operations like <code class="language-plaintext highlighter-rouge">mod</code>, <code class="language-plaintext highlighter-rouge">div</code> and <code class="language-plaintext highlighter-rouge">mul</code> which could also be used but cost 5 gas each.</p><h3 id="️-building-lookup-tables-in-the-evm"><span class="mr-2">🏗️ Building Lookup Tables in the EVM</span><a href="#️-building-lookup-tables-in-the-evm" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Similar to how there are several approaches with varying efficiencies when building a selector indexer there are also several approaches to building and retrieving values from lookup tables.</p><h4 id="push-tables"><span class="mr-2">Push Tables</span><a href="#push-tables" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>With these tables, you can pack up to 16x 2-byte jump destinations into a single value and then have the table be pushed in its entirety onto the stack using a <code class="language-plaintext highlighter-rouge">PUSH</code> opcode. This is quite efficient as “loading” the table itself only requires 3 gas and retrieving a value 12 gas, assuming your index is already multiplied by 16 to ensure it’s a useful offset. The big constraint with this approach is that it only supports indices that are in the range 0-15 which will be an issue if your contract has more than 16 functions that need to be jumped to. Assuming you’re able to find a group of 4-bits that is unique across all selectors the switch would look as follows:</p><div file="16 Selector Switch.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="16 Selector Switch.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre><td class="rouge-code"><pre>// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+[JUMP_TABLE]             // [table]
+dup2 [IND_SHIFT] shr     // [shifted_selector, table, selector]
+// Mask offset by 4 bits to ensure the result will be a valid table shift.
+0xf0 and                 // [index, table, selector]
+shr 0xffff and           // [jump_dest, selector]
+jump
+
+// At the jump destinations, check if selector matches:
+0x???????? sub error_dest jumpi
+FUNCTION_LOGIC()
+
+error_dest:
+  0x0 0x0 revert
+</pre></table></code></div></div><p>You can fit more than 16 labels into a push table if each label is smaller than 16 bits. This will almost certainly be the case as the current contract size limit is 24kB meaning the largest realistic jump destination would only require 15 bits. Depending on your contract size your jump labels may take up even less space. However, an important thing to note is that if the bit size of your labels is not a power of 2 you’ll need an additional push and multiplication operation to compute the shift for the lookup. Example with jump label size of 12-bits (<code class="language-plaintext highlighter-rouge">0xc</code> in hexadecimal):</p><div file="12-bit labels.huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="12-bit labels.huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre><td class="rouge-code"><pre>// Gets selector.
+pc calldataload 0xe0 shr // [selector]
+[JUMP_TABLE]             // [table]
+dup2 [IND_SHIFT] shr     // [shifted_selector, table, selector]
+// Mask unique bits
+0x1f and                 // [index, table, selector]
+// Multiply by 12 to get the offset of the label
+0xc mul                  // [label_offset, table, selector]
+shr 0xfff and            // [jump_dest, selector]
+jump
+
+// At the jump destinations, check if selector matches:
+0x???????? sub error_dest jumpi
+FUNCTION_LOGIC()
+
+error_dest:
+  0x0 0x0 revert
+</pre></table></code></div></div><h4 id="table-trees"><span class="mr-2">Table Trees</span><a href="#table-trees" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>Push tables can be extended to support even more functions by creating a shallow tree whereby the first table selects a sub-table that determines the final destination. While this is technically still a tree with logarithmic $O(\log n)$ time complexity, practically its time complexity is constant as you’ll never need a tree that’s deeper than 3 levels. Using such a tree makes selector indexing even easier as you don’t need to find a tight bit range that uniquely identifies all selectors but instead, you just need to find a smaller range that groups selectors in groups no larger than 16, with each group able to have their own range.</p><p>As an example imagine a contract with 128-functions:</p><div file="128 Randomly generated function selectors" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="128 Randomly generated function selectors"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+</pre><td class="rouge-code"><pre>0x4482d182 0xf5d05a80 0x24ce2433 0x82c35051 0x9eb17fb7 0x4802a7fd 0x2c0e5bac 0xf8313123
+0x4e2464cd 0x9d5f65e1 0x0fa9584d 0x6f019090 0xf4f3fbb8 0x29cd002a 0xb82bf507 0x4c0656c3
+0xbd0a5449 0x59327a62 0x3c253f7f 0x969e72a9 0x0a7a2ceb 0x5c46eeab 0xac4ab926 0x84089c91
+0x4dc74a98 0x55cac09d 0x02a69ada 0x5acc746b 0xebab72a8 0xce280460 0x5820c09a 0x522fecc8
+0xced910c1 0xaed519b4 0xe850db0f 0x144db955 0x64a42fda 0xb569a22a 0x78890a44 0x96eb0ebc
+0x237e81b6 0x605a6e34 0x63ae1af7 0x25a86543 0xd7d01f4a 0xf6763fed 0xc8fa772d 0x10897e4e
+0xb85abce6 0xaa77f58e 0x3bedf0bb 0x149791ea 0x3eeb3d98 0xe59dc2db 0x063cdcb2 0xfadb4823
+0xa008b45a 0xb84df3af 0x9fb39812 0xc8a0ebf2 0xe7ad912d 0x94a32c56 0xd2b1a96a 0xd4a8589d
+0x4dd90963 0xb4830428 0x7cf58051 0x6573a075 0xcdc89bc1 0x7889cf21 0x03682317 0xc06a9ed2
+0x46f2c6b0 0x06544126 0x078d22e1 0x4f492320 0xb6a69d6c 0x103eedc6 0x2f3cb837 0xeac9fedb
+0xf6d647f0 0x6b0dc469 0x81a6d8df 0x2b2911a4 0x02e71741 0xc746d79d 0x0c97fce9 0xff4ab2e2
+0xb83ac239 0x40341065 0x00bc2475 0x36dd0f40 0x378a6476 0x6491330a 0x8a104473 0x0d33ae64
+0xb68734d9 0xde45a986 0xd70e58ee 0xebaf8b57 0xcc5ade18 0x94fbb841 0xcd42e3d1 0xb387c57a
+0xde1e50f3 0x94a40bdf 0xc59f70c9 0x9ff884da 0xc3a075fe 0x81ebea85 0x75b569d7 0x07dcb7bf
+0x30aa9aae 0x21770e06 0x88e13c98 0x9ff7735a 0x0d2c39db 0x656f06d0 0x5971a031 0x4925d035
+0x042a2f53 0x50fce891 0xb673685b 0xa54741fc 0x9c527625 0xa55cf11c 0x2ba1c786 0x3bd3b8ec
+</pre></table></code></div></div><p>You can then find a 4-bit mask that splits the selectors into distinct groups:</p><div file="Selectors grouped by a set of bits" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Selectors grouped by a set of bits"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+</pre><td class="rouge-code"><pre>root mask: 00000000000000000000000000001111
+group (0000):
+  gmask: 00000000000000000000000001111000
+  [0xf5d05a80,0x6f019090,0xce280460,0x46f2c6b0,0x4f492320,0xf6d647f0,0x36dd0f40,0x656f06d0]
+group (0010):
+  gmask: 00000000000000000000000011110000
+  [0x4482d182,0x59327a62,0x063cdcb2,0x9fb39812,0xc8a0ebf2,0xc06a9ed2,0xff4ab2e2]
+group (0100):
+  gmask: 00000000000000000000000011110000
+  [0xaed519b4,0x78890a44,0x605a6e34,0x2b2911a4,0x0d33ae64]
+group (0101):
+  gmask: 00000000000000001111000000000000
+  [0x144db955,0x6573a075,0x40341065,0x00bc2475,0x81ebea85,0x4925d035,0x9c527625]
+group (0110):
+  gmask: 00001111000000000000000000000000
+  [0xac4ab926,0x237e81b6,0xb85abce6,0x94a32c56,0x06544126,0x103eedc6,0x378a6476,0xde45a986,0x21770e06,0x2ba1c786]
+group (0111):
+  gmask: 00000000000000000000000011110000
+  [0x9eb17fb7,0xb82bf507,0x63ae1af7,0x03682317,0x2f3cb837,0xebaf8b57,0x75b569d7]
+group (1000):
+  gmask: 11110000000000000000000000000000
+  [0xf4f3fbb8,0x4dc74a98,0xebab72a8,0x522fecc8,0x3eeb3d98,0xb4830428,0xcc5ade18,0x88e13c98]
+group (1001):
+  gmask: 00000000000000000000000011110000
+  [0xbd0a5449,0x969e72a9,0x6b0dc469,0x0c97fce9,0xb83ac239,0xb68734d9,0xc59f70c9]
+group (1011):
+  gmask: 00000000000000000001111000000000
+  [0x0a7a2ceb,0x5c46eeab,0x5acc746b,0x3bedf0bb,0xe59dc2db,0xeac9fedb,0x0d2c39db,0xb673685b]
+group (1100):
+  gmask: 00000000000000000000000011110000
+  [0x2c0e5bac,0x96eb0ebc,0xb6a69d6c,0xa54741fc,0xa55cf11c,0x3bd3b8ec]
+group (1110):
+  gmask: 00000000000000000000000001111000
+  [0x10897e4e,0xaa77f58e,0xd70e58ee,0xc3a075fe,0x30aa9aae]
+group (1111):
+  gmask: 00000000000000000001111000000000
+  [0x3c253f7f,0xe850db0f,0xb84df3af,0x81a6d8df,0x94a40bdf,0x07dcb7bf]
+</pre></table></code></div></div><h4 id="table-in-code"><span class="mr-2">Table in Code</span><a href="#table-in-code" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>As an alternative to using the <code class="language-plaintext highlighter-rouge">PUSH</code> opcode to store &amp; load lookup tables, which limits you to 32 bytes at a time you can store larger lookup tables directly in the bytecode and load the target label with <code class="language-plaintext highlighter-rouge">CODECOPY</code>. In Huff this is enabled by the jump-table syntax:</p><div file="Huff Jump Tables" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Huff Jump Tables"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+</pre><td class="rouge-code"><pre>// Example for non-packed table from Huff's docs
+#define jumptable SWITCH_TABLE {
+    jump_one jump_two jump_three jump_four
+}
+
+// Packed version
+#define jumptable__packed SWITCH_TABLE_TIGHT {
+    jump_one jump_two jump_three jump_four
+}
+
+#define macro MAIN() = takes(0) returns(0) {
+    // Push bytecode offset of table onto the stack
+    __tablestart(SWITCH_TABLE)
+}
+
+</pre></table></code></div></div><p>While this approach lends itself well to larger selectors sets it does use more gas than a 1-level push table as you need to copy the jump dest into memory using <code class="language-plaintext highlighter-rouge">CODECOPY</code> and then load it using <code class="language-plaintext highlighter-rouge">MLOAD</code>.</p><h4 id="-code-as-table--direct-jumping"><span class="mr-2">🏃 Code as Table / Direct Jumping</span><a href="#-code-as-table--direct-jumping" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>Instead of looking up the jump destination based on some derived index you could directly convert it to a jump destination and jump to it. To do this the jump destinations should be evenly spaced so that the index can easily be converted to a jump dest: <code class="language-plaintext highlighter-rouge">jump_dest = index * dest_spacing + offset</code>. Even spacing comes at the large downside of increased bytecode size as you’ll need to pad the bytecode of all your methods to be as large as your largest method:</p><p><img data-src="/assets/images/23-01-better-switches/padded-code-1.svg" alt="Linear If-Else Switch Flow Chart" data-proofer-ignore> <em>Illustration of the bytecode of a contract utilizing padding to allow for direct jump destination determination</em></p><p>In Huff:</p><div file="Direct Jump Selector Switch in Huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Direct Jump Selector Switch in Huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+</pre><td class="rouge-code"><pre>GET_SELECTOR()             // [selector]
+dup1 GET_IND()             // [index, selector]
+[SPACING] mul [OFFSET] add // [jump_dest, selector]
+jump
+
+// Code At every function
+// Label required in Huff to ensure `JUMPDEST` is generated during compilation
+// otherwise dynamic `JUMP` will revert
+fn1:
+// '0x????????' represents the expected selector
+0x???????? sub revert_dest jumpi
+  // Actual function logic
+// Bytecode padding (simplest being 0-bytes which are interpreted as stop opcodes)
+stop stop // ......
+
+revert_dest:
+  0x0 0x0 revert
+</pre></table></code></div></div><p>Depending on your chosen selector indexing method, entire code sections may have to be empty with only a revert at the beginning to catch incorrect selectors. The “Selector Check” code ensures that the selector is actually part of the ABI and didn’t just e.g. have the same bits as a different valid selector.</p><p><strong>Saving on Padding by rearranging code:</strong></p><p>Instead of having the different functions have the same bytecode size we can move up the selector-check code and pad those instances instead of the actual functions to massively reduce the overall bytecode. This can be crucial because depending on the size of functions and index range it may not even be feasible to pad functions. Since the selector-check utilizes a <code class="language-plaintext highlighter-rouge">JUMPI</code>-op anyway the destination can simply be set to the actual functions instead of the revert code. This does however add 1 gas to the runtime gas cost due to the added <code class="language-plaintext highlighter-rouge">JUMPDEST</code>. Rearranging the code makes it look like this:</p><blockquote class="prompt-info"><div><p>The blocks are not meant to be an accurate, proportional display of bytecode size but rather a rough, visual representation</p></div></blockquote><p><img data-src="/assets/images/23-01-better-switches/padded-code-2.svg" alt="Linear If-Else Switch Flow Chart" data-proofer-ignore></p><div file="Compact Direct Jump Selector Switch in Huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Compact Direct Jump Selector Switch in Huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+</pre><td class="rouge-code"><pre>GET_SELECTOR()             // [selector]
+dup1 GET_IND()             // [index, selector]
+[SPACING] mul [OFFSET] add // [jump_dest, selector]
+jump
+
+// For every possible destination:
+dest1:
+  0x???????? eq fn1 jumpi
+  0x0 0x0 revert
+dest2:
+  0x???????? eq fn2 jumpi
+  0x0 0x0 revert
+dest3:
+  0x0 0x0 revert
+  stop stop stop stop stop stop stop stop stop stop
+  // (10-bytes padding required to match `PUSH4 &lt;4x?&gt; EQ PUSH2 &lt;2x?&gt; JUMPI`)
+dest4:
+  0x???????? eq fn3 jumpi
+  0x0 0x0 revert
+
+fn1:
+  // Code for function 1
+fn2:
+  // Code for function 2
+fn3:
+  // Code for function 3
+</pre></table></code></div></div><p>The packed block of selector-checks and reverts is also why I like to call this approach the “code as table” approach because while it’s not exactly a lookup table, the contract’s code acts like one by translating the initial jump to the final destination through its execution.</p><h3 id="bringing-it-together"><span class="mr-2">Bringing it Together</span><a href="#bringing-it-together" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>When building selector switches the main tradeoff will be between gas efficiency and code size. Without sacrificing too much in code size you can already have large gains in gas efficiency, especially for contracts with larger selector sets. To save even more gas you could sacrifice collision resistance, removing the selector-check. However, I’d highly discourage this as it may lead to vulnerabilities in interacting contracts that expect external contracts to revert for calls to unsupported methods.</p><p>To build constant gas function dispatchers for your contracts you’ll have to carefully compare and test different combinations of components to find what best suits your needs.</p><h2 id="-special-branches"><span class="mr-2">💫 Special Branches</span><a href="#-special-branches" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><h3 id="-payable-functions"><span class="mr-2">💵 Payable Functions</span><a href="#-payable-functions" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><p>Beyond simply checking the selector and identifying the section of code that belongs to the function you may also want your function dispatcher to check the call’s <code class="language-plaintext highlighter-rouge">msg.value</code> (aka <code class="language-plaintext highlighter-rouge">callvalue</code>). There are several reasons why it’s beneficial from an optimization perspective to put callvalue checks in the function dispatcher:</p><ul><li>It can make the <code class="language-plaintext highlighter-rouge">require(msg.value == 0)</code> check for non-payable functions cheaper<li>It’ll help the dispatcher route to payable methods more efficiently</ul><p><strong>Binary Search Function Dispatchers</strong></p><p>For a binary search function dispatcher you can put a branch checking the <code class="language-plaintext highlighter-rouge">callvalue</code> at the very beginning:</p><blockquote class="prompt-tip"><div><p>The <code class="language-plaintext highlighter-rouge">JUMPI</code> opcode jumps to the target destination whenever the condition value on the stack is <strong>non-zero</strong>. This means you don’t have to waste gas adding <code class="language-plaintext highlighter-rouge">ISZERO ISZERO</code> prior to a <code class="language-plaintext highlighter-rouge">JUMPI</code> for condition values that may be &gt;1. This fact also allows you to save gas in certain situations by inverting conditions via the removal of a single <code class="language-plaintext highlighter-rouge">ISZERO</code> and swapping the code that is present after the <code class="language-plaintext highlighter-rouge">JUMPI</code> and at the <code class="language-plaintext highlighter-rouge">JUMPDEST</code>.</p></div></blockquote><div file="Payable Checking Branch In Huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Payable Checking Branch In Huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+</pre><td class="rouge-code"><pre>// load selector
+pc calldataload 0xe0 shr
+
+callvalue payable_fn_tree jumpi
+// binary search function dispatcher with only 0-ETH functions
+
+payable_fn_tree:
+// binary search function dispatcher with only ETH-accepting functions
+
+</pre></table></code></div></div><p>This will make your contract smaller as you won’t have to repeat callvalue checking code for every function and it’ll make payable functions cheaper as it’ll shorten the path to the payable functions when value is sent. What you also have to be careful of is if your <code class="language-plaintext highlighter-rouge">payable</code> functions are also meant to be able to <strong>not</strong> accept ETH, i.e. being executed when <code class="language-plaintext highlighter-rouge">msg.value == 0</code>. If you don’t include the selectors of the payable functions in the non-payable side of the tree you won’t be able to call the methods without callvalue; this may be desirable in some cases.</p><p><strong>Constant Gas Function Dispatchers</strong></p><p>Depending on your selector indexer you may not necessarily want to put your <code class="language-plaintext highlighter-rouge">callvalue</code> check at the beginning of your contract. This is because it’ll add the check to the execution flow of <strong>all</strong> functions regardless if they’re payable or not. By only adding the check to the non-payable methods you’ll make payable functions cheaper. You can easily use the same <code class="language-plaintext highlighter-rouge">JUMPI</code> from the selector check for the callvalue check:</p><div file="16-Byte Non-Payable Selector Check" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="16-Byte Non-Payable Selector Check"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+</pre><td class="rouge-code"><pre>selector_check_dest:
+  &lt;expected_selector&gt; eq // [selector == expected_selector ? 1 : 0]
+  callvalue lt           // [msg.value &lt; selector == expected_selector ? 1 : 0]
+  &lt;final_function_dest&gt; jumpi
+  returndatasize returndatasize revert
+</pre></table></code></div></div><p>This above code works because the result of <code class="language-plaintext highlighter-rouge">EQ</code> in the EVM is either <code class="language-plaintext highlighter-rouge">0</code> or <code class="language-plaintext highlighter-rouge">1</code>, meaning that the resulting condition value can only be <code class="language-plaintext highlighter-rouge">1</code> if both the selector matched and the <code class="language-plaintext highlighter-rouge">msg.value</code> is strictly <strong>less</strong> than <code class="language-plaintext highlighter-rouge">1</code>, meaning <code class="language-plaintext highlighter-rouge">0</code>. If the selectors don’t match there’s no <code class="language-plaintext highlighter-rouge">msg.value</code> that’ll satisfy the <code class="language-plaintext highlighter-rouge">LT(CALLVALUE(), EQ(...))</code> comparison. This selector check block is great because it’s exactly 16 bytes large (assuming 2-byte jump dest and 4-byte selector) allowing you to use cheaper base-2 operations to convert your index into the jump destination.</p><h3 id="fallback-functions"><span class="mr-2">Fallback Functions</span><a href="#fallback-functions" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h3><h4 id="receive-fallback"><span class="mr-2">Receive fallback</span><a href="#receive-fallback" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>The receive fallback function is typically used to accept ETH via empty calls. In Solidity it’s defined with the <code class="language-plaintext highlighter-rouge">receive</code> keyword:</p><div class="language-solidity highlighter-rouge"><div class="code-header"> <span data-label-text="Solidity"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+</pre><td class="rouge-code"><pre><span class="k">receive</span><span class="p">()</span> <span class="k">payable</span> <span class="k">external</span> <span class="p">{</span>
+    <span class="c1">// ...
+</span><span class="p">}</span>
+</pre></table></code></div></div><p>To check whether the current call is to the receive fallback function you can treat it like a call with the <code class="language-plaintext highlighter-rouge">0x00000000</code> selector but no calldata i.e. a <code class="language-plaintext highlighter-rouge">CALLDATASIZE</code> of <code class="language-plaintext highlighter-rouge">0</code>. This is because in the EVM if you try to read calldata beyond what was actually provided via <code class="language-plaintext highlighter-rouge">CALLDATALOAD</code> or <code class="language-plaintext highlighter-rouge">CALLDATACOPY</code> the EVM will pad the result with <code class="language-plaintext highlighter-rouge">0x00</code>-bytes. Meaning that our selector extracting code <code class="language-plaintext highlighter-rouge">pc calldataload 0xe0 shr</code> will place a <code class="language-plaintext highlighter-rouge">0</code> on the stack when the calldata is empty, the same as if you were to call the contract with the actual zero selector <code class="language-plaintext highlighter-rouge">0x00000000</code>. So how do you differentiate these cases? As previously eluded to, <code class="language-plaintext highlighter-rouge">CALLDATASIZE</code> will push the <em>length</em> of calldata to the stack, this allows you to easily check which is which (if you have both in your contract):</p><div file="0-Selector vs. Receive-Fallback check in Huff" class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="0-Selector vs. Receive-Fallback check in Huff"><i class="far fa-file-code"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+</pre><td class="rouge-code"><pre>     calldatasize iszero receive_fn jumpi
+dup1 0x00000000 eq zero_selector_fn jumpi
+</pre></table></code></div></div><p>The fact that <code class="language-plaintext highlighter-rouge">0</code> is pushed to the stack as the selector for the receive fallback is especially useful for constant gas dispatchers as you don’t have to change your selector indexer or table lookup for it. The only change required is the final selector check which can be changed from being selector based to <code class="language-plaintext highlighter-rouge">calldatasize</code>.</p><h4 id="fallback-fallback"><span class="mr-2">Fallback-Fallback</span><a href="#fallback-fallback" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h4><p>The <code class="language-plaintext highlighter-rouge">fallback</code>-fallback function is the function called when nothing else matches and in Solidity it accepts arbitrary calldata. Generally, I’d heavily discourage the use of the <code class="language-plaintext highlighter-rouge">fallback</code> method, unless you’re writing a base proxy contract as it creates a foot gun other developers could step into. <a href="https://medium.com/zengo/without-permit-multichains-exploit-explained-8417e8c1639b">Multicoin’s bridge was exploited</a> precisely because they were not expecting WETH9’s silent fallback function. Therefore I won’t go too much into it but essentially if you need a fallback function you just need to change the <code class="language-plaintext highlighter-rouge">0x0 0x0 revert</code> at the end of all branches to a <code class="language-plaintext highlighter-rouge">fallback jump</code> to ensure that all code paths continue in the fallback function if an appropriate selector was not found.</p><h2 id="meths-constant-gas-function-dispatcher"><span class="mr-2">METH’s Constant Gas Function Dispatcher</span><a href="#meths-constant-gas-function-dispatcher" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>For <a href="https://github.com/philogy/meth-weth">METH</a>, I built a practical 23-function (24 if you count the receive fallback), constant* gas function dispatcher that costs about half what the average cost for a normal binary search function dispatcher would be. I put an asterisk next to the “constant” because the cost isn’t the same for all functions:</p><div class="table-wrapper"><table><thead><tr><th>Category<th>Gas Cost<tbody><tr><td>Receive Fallback<td>54<tr><td>Payable Functions<td>55<tr><td>Non-payable Functions<td>60</table></div><p><strong>Note:</strong> <em>the gas cost does not include the cost to read the selector as I don’t consider that part of the “dispatcher” and it’s required regardless of the type of dispatcher you create.</em></p><blockquote class="prompt-info"><div><p><strong>Update</strong>: The above gas cost figures are no longer fully accurate for METH’s function dispatcher. This is because for certain methods with checks e.g. <code class="language-plaintext highlighter-rouge">transfer</code>, METH now combines the selector-check with the balance-check to save on gas by reducing the amount of unique <code class="language-plaintext highlighter-rouge">JUMPI</code> instructions. The cost of the <code class="language-plaintext highlighter-rouge">JUMPI</code> is therefore no longer solely carried by the dispatcher and is in practice reduced depending how you want to attribute its costs.</p></div></blockquote><p>The dispatcher is so efficient because of how the selectors are laid out. Specifically, the highest 8-bits of the selectors are unique for all functions. 8-bits or 0-255 is a small enough range where the locations for the selector checks still fit into the 24kB contract size limit. The unique bits being the highest also means I only need to shift and mask the value once to extract the index, clear the dirty bits and construct the jump destination:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+</pre><td class="rouge-code"><pre>pc calldataload 0xe0 shr // [selector]
+
+dup1                     // [selector; selector]
+// Shift right by 20 to preserve the 12 topmost bits
+0x14 shr                 // [sbits ∈ (b000000000000, b111111111111); selector]
+// Overwrite the lower 4 bits with 1, keeping only the unique upper 8 bits
+0x0f or                  // [index * 16 + 15; selector]
+
+// Jump to the created destination
+jump
+</pre></table></code></div></div><p>Using a bitwise-OR instead of AND to “clear” the lower bits is a cool trick in my opinion because it serves two purposes:</p><ol><li>It “evens out” the lower bits of the output value to ensure that the possible output values are evenly spaced out<li>It ensures the minimum output value is <code class="language-plaintext highlighter-rouge">15</code> or <code class="language-plaintext highlighter-rouge">b1111</code>, meaning the receive-fallback function and selectors with 8 zero upper bits can still result in a valid jump destination without having to use an additional <code class="language-plaintext highlighter-rouge">PUSH</code> &amp; <code class="language-plaintext highlighter-rouge">ADD</code> operation.</ol><p>I then use the “code as table” approach adding selector checks with the final destinations at all valid jump destinations and a simple <code class="language-plaintext highlighter-rouge">JUMPDEST PUSH0 PUSH0 REVERT</code>, with padding at all invalid destinations, encapsulated in the <code class="language-plaintext highlighter-rouge">NO_MATCH</code> macro. Here’s an excerpt from the <a href="https://github.com/Philogy/meth-weth/blob/main/src/METH_WETH.huff#L715-L982">Huff code</a>:</p><div class="language-plaintext highlighter-rouge"><div class="code-header"> <span data-label-text="Plaintext"><i class="fas fa-code small"></i></span> <button aria-label="copy" data-title-succeed="Copied!"><i class="far fa-clipboard"></i></button></div><div class="highlight"><code><table class="rouge-table"><tbody><tr><td class="rouge-gutter gl"><pre class="lineno">1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+</pre><td class="rouge-code"><pre>    dest_0x18f: NON_PAYABLE_FUNC_CHECK(0x18160ddd, totalSupply_final_dest)
+    dest_0x19f: NO_MATCH()
+    dest_0x1af: NO_MATCH()
+    dest_0x1bf: NO_MATCH()
+    dest_0x1cf: NO_MATCH()
+    dest_0x1df: NO_MATCH()
+    dest_0x1ef: NO_MATCH()
+    dest_0x1ff: NO_MATCH()
+    dest_0x20f: NON_PAYABLE_FUNC_CHECK(0x205c2878, withdrawTo_final_dest)
+    dest_0x21f: NO_MATCH()
+    dest_0x22f: NO_MATCH()
+    dest_0x23f: NON_PAYABLE_FUNC_CHECK(0x23b872dd, transferFrom_final_dest)
+    dest_0x24f: NO_MATCH()
+    dest_0x25f: NO_MATCH()
+    dest_0x26f: NO_MATCH()
+    dest_0x27f: NO_MATCH()
+    dest_0x28f: PAYABLE_FUNC_CHECK(0x28026ace, depositAndApprove_final_dest)
+    dest_0x29f: NO_MATCH()
+    dest_0x2af: NO_MATCH()
+    dest_0x2bf: NO_MATCH()
+    dest_0x2cf: NO_MATCH()
+    dest_0x2df: NO_MATCH()
+    dest_0x2ef: NON_PAYABLE_FUNC_CHECK(0x2e1a7d4d, withdraw_final_dest)
+
+</pre></table></code></div></div><p>The main downside to this function dispatcher is code size, with 256 possible destinations and each block being padded to 16 bytes large the function dispatcher alone is 4.1 kB large 🤯. However, this is a worthy tradeoff to me as the cost of the contract’s size is one-time and paid at deployment vs. the runtime gas cost which will continuously be paid by all users of METH.</p><blockquote class="prompt-info"><div><p><strong>Update</strong>: METH has moved to using the “padded function” approach whereby each destination is 64-bytes large, blowing up the contract’s size to 16kB (the majority of which is padding). This is mainly to allow for <code class="language-plaintext highlighter-rouge">JUMPI</code> reuse between the selector-check and other checks. Due to certain functions being larger than 64-bytes they overflow into the next block meaning certain unimplemented selectors will revert exceptionally (using all gas) rather than being simply reverted.</p></div></blockquote><h2 id="efficient-function-dispatchers-post-eip-4200"><span class="mr-2">Efficient Function Dispatchers Post EIP-4200</span><a href="#efficient-function-dispatchers-post-eip-4200" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>In the suite of upcoming EOF upgrades to the EVM, <a href="https://eips.ethereum.org/EIPS/eip-4200">EIP-4200</a> proposes adding new jump opcodes to replace the existing <code class="language-plaintext highlighter-rouge">JUMP</code>, <code class="language-plaintext highlighter-rouge">JUMPI</code> and <code class="language-plaintext highlighter-rouge">JUMPDEST</code> opcodes that are responsible for branching and jumping in EVM contracts today. The <code class="language-plaintext highlighter-rouge">RJUMP</code> and <code class="language-plaintext highlighter-rouge">RJUMPI</code> opcodes are 1-to-1 replacements of the <code class="language-plaintext highlighter-rouge">JUMP</code> and <code class="language-plaintext highlighter-rouge">JUMPI</code> opcodes with a few minor differences: no <code class="language-plaintext highlighter-rouge">JUMPDEST</code> will be required at the destination (-1 gas), they’ll only accept static relative jump destinations that aren’t pushed (-3 gas) and each only cost 2 gas meaning direct jumps (<code class="language-plaintext highlighter-rouge">RJUMP &lt;dest&gt;</code> vs. <code class="language-plaintext highlighter-rouge">PUSH &lt;dest&gt; JUMP ... JUMP</code>) will be 10 gas cheaper and conditional jumps will be 12 gas cheaper. Note that the EIP is not yet final so the gas costs may change.</p><p>However, the EIP-4200 opcode that’ll have the biggest impact on function dispatchers in my opinion is the <code class="language-plaintext highlighter-rouge">RJUMPV</code> opcode. The <code class="language-plaintext highlighter-rouge">RJUMPV</code> opcode is intended to only cost 4 gas and acts as a jump table with up to 256 jump destinations (technically only 255 right now but I’ve proposed <a href="https://github.com/ethereum/EIPs/pull/6546">a change</a> that’d allow up to 256). At runtime, the opcode would accept an index between 0-255 and then jump to the configured jump destination. The table doesn’t have to be 256 large and you can even leave “gaps” in the form of 0 offsets which will default to not jumping. The <code class="language-plaintext highlighter-rouge">RJUMPV</code> opcode would allow constant gas function dispatchers like METH’s to not only be cheaper but take up less bytecode. It’ll also make it easier for compilers of high-level languages like Solidity, Vyper, Fe, Sway, etc. to construct constant gas dispatchers in a generalized manner. This is because now the selector indexer can have an index range size of up to 256 at no big cost.</p><h2 id="conclusion"><span class="mr-2">Conclusion</span><a href="#conclusion" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><p>Function dispatchers are an important part of smart contracts and have so far remained relatively unexplored in the optimizooor space. Especially pre-EIP-4200 there’s a lot of room for clever tricks, optimizing the dispatcher of a larger contract can help shave 10, 20, 40+ gas from your contract which can be a lot in the land of hyper-optimized Huff contracts.</p><p>I hope this post was valuable to you, feel free to give your thoughts and feedback and follow me on my Twitter <a href="https://twitter.com/real_philogy">@real_philogy</a> for more technical crypto content.</p><h2 id="footnotes"><span class="mr-2">Footnotes</span><a href="#footnotes" class="anchor text-muted"><i class="fas fa-hashtag"></i></a></h2><div class="footnotes" role="doc-endnotes"><ol><li id="fn:1" role="doc-endnote"><p>Joseph A. Carr, Attribution, via Wikimedia Commons <a href="#fnref:1" class="reversefootnote" role="doc-backlink">&#8617;</a></p><li id="fn:2" role="doc-endnote"><p>Every contract written in high level languages that target the EVM like Solidity, Vyper, Fe have selector switches by default, however certain MEV bot contracts written in low level languages / assembly may omit an ABI compliant selector switch to save on even more gas. <a href="#fnref:2" class="reversefootnote" role="doc-backlink">&#8617;</a></p><li id="fn:3" role="doc-endnote"><p><a href="https://twitter.com/z0age/status/1618704547404468224">https://twitter.com/z0age/status/1618704547404468224</a> <a href="#fnref:3" class="reversefootnote" role="doc-backlink">&#8617;</a></p></ol></div></div><div class="post-tail-wrapper text-muted"><div class="post-meta mb-3"> <i class="far fa-folder-open fa-fw mr-1"></i> <a href='/categories/smart-contract-development/'>smart-contract-development</a></div><div class="post-tags"> <i class="fa fa-tags fa-fw mr-1"></i> <a href="/tags/solidity/" class="post-tag no-text-decoration" >solidity</a> <a href="/tags/evm/" class="post-tag no-text-decoration" >EVM</a> <a href="/tags/smart-contracts/" class="post-tag no-text-decoration" >smart contracts</a> <a href="/tags/development/" class="post-tag no-text-decoration" >development</a></div><div class="post-tail-bottom d-flex justify-content-between align-items-center mt-3 pt-5 pb-2"><div class="license-wrapper"> This post is licensed under <a href="https://creativecommons.org/licenses/by/4.0/"> CC BY 4.0 </a> by the author.</div><div class="share-wrapper"> <span class="share-label text-muted mr-1">Share</span> <span class="share-icons"> <a href="https://twitter.com/intent/tweet?text=Constant+Gas+Function+Dispatchers+in+the+EVM+-+Philogy%27s+blog&url=https%3A%2F%2Fphilogy.github.io%2Fposts%2Fselector-switches%2F" data-toggle="tooltip" data-placement="top" title="Twitter" target="_blank" rel="noopener" aria-label="Twitter"> <i class="fa-fw fab fa-twitter"></i> </a> <a href="https://t.me/share/url?url=https%3A%2F%2Fphilogy.github.io%2Fposts%2Fselector-switches%2F&text=Constant+Gas+Function+Dispatchers+in+the+EVM+-+Philogy%27s+blog" data-toggle="tooltip" data-placement="top" title="Telegram" target="_blank" rel="noopener" aria-label="Telegram"> <i class="fa-fw fab fa-telegram"></i> </a> <i id="copy-link" class="fa-fw fas fa-link small" data-toggle="tooltip" data-placement="top" title="Copy link" data-title-succeed="Link copied successfully!"> </i> </span></div></div></div></div></div><div id="panel-wrapper" class="col-xl-3 pl-2 text-muted"><div class="access"><div id="access-lastmod" class="post"><div class="panel-heading">Recently Updated</div><ul class="post-content pl-0 pb-1 ml-1 mt-2"><li><a href="/posts/curta-zsafe-writeup/">Curta CTF ZSafe Write-up</a><li><a href="/posts/paradigm-ctf-2022-write-up-collection/">Paradigm CTF 2022: Write-Up Collection</a><li><a href="/posts/quitting-dereg/">Quitting DeReg And What's Next</a><li><a href="/posts/defi-accounting-for-noobs/">Beancount: DeFi Accounting For Noobs</a><li><a href="/posts/selector-switches/">Constant Gas Function Dispatchers in the EVM</a></ul></div><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/evm/">EVM</a> <a class="post-tag" href="/tags/smart-contracts/">smart contracts</a> <a class="post-tag" href="/tags/solidity/">solidity</a> <a class="post-tag" href="/tags/security/">security</a> <a class="post-tag" href="/tags/accounting/">accounting</a> <a class="post-tag" href="/tags/beancount/">beancount</a> <a class="post-tag" href="/tags/defi/">DeFi</a> <a class="post-tag" href="/tags/development/">development</a> <a class="post-tag" href="/tags/personal/">personal</a></div></div></div><script src="/assets/lib/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><div id="toc-wrapper" class="pl-0 pr-4 mb-5"><div class="panel-heading pl-3 pt-2 mb-2">Contents</div><nav id="toc" data-toggle="toc"></nav></div></div></div><div class="row"><div id="tail-wrapper" class="col-12 col-lg-11 col-xl-9 pl-3 pr-3 pr-xl-4"><div id="related-posts" class="mt-5 mb-2 mb-sm-4"><h3 class="pt-2 mt-1 mb-4 ml-1" data-toc-skip>Further Reading</h3><div class="card-deck mb-4"><div class="card"> <a href="/posts/paradigm-ctf-2022-write-up-collection/"><div class="card-body"> <em class="small" data-ts="1661164560" data-df="ll" > Aug 22, 2022 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>Paradigm CTF 2022: Write-Up Collection</h3><div class="text-muted small"><p> Intro I participated in the Paradigm CTF 2022 where I was personally able to solve 7 out of the 13 EVM-related challenges (not counting the PVP game 0xMonaco and external underhanded solidity conte...</p></div></div></a></div><div class="card"> <a href="/posts/curta-zsafe-writeup/"><div class="card-body"> <em class="small" data-ts="1705568820" data-df="ll" > Jan 18, 2024 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>Curta CTF ZSafe Write-up</h3><div class="text-muted small"><p> This is a write-up for the Curta CTF ZSafe challenge. I initially didn’t submit a solution due to personal time constraints and issues with foundry scripts that made it impossible to submit directl...</p></div></div></a></div><div class="card"> <a href="/posts/quitting-dereg/"><div class="card-body"> <em class="small" data-ts="1700845080" data-df="ll" > Nov 24, 2023 </em><h3 class="pt-0 mt-1 mb-3" data-toc-skip>Quitting DeReg And What's Next</h3><div class="text-muted small"><p> Introduction For just over a year now I’ve been working on a startup called “DeReg”, mostly full-time together with my amazing brother &amp;amp; co-founder Dimitri. Recently we have decided to stop th...</p></div></div></a></div></div></div><div class="post-navigation d-flex justify-content-between"><div class="btn btn-outline-primary disabled" prompt="Older"><p>-</p></div><a href="/posts/paradigm-ctf-2022-write-up-collection/" class="btn btn-outline-primary" prompt="Newer"><p>Paradigm CTF 2022: Write-Up Collection</p></a></div></div></div><footer class="pl-3 pr-3"><div class="row d-flex justify-content-between align-items-center text-muted pl-0 pr-0"><div class="col-6 footer-left width-full"><p class="mb-0"> © 2026 <a href="/about">Philippe Dumonet</a>. <span data-toggle="tooltip" data-placement="top" title="Except where otherwise noted, the blog posts on this site are licensed under the Creative Commons Attribution 4.0 International (CC BY 4.0) License by the author.">Some rights reserved.</span></p></div><div class="col-6 footer-right"><p class="mb-0"> Powered by <a href="https://jekyllrb.com" target="_blank" rel="noopener">Jekyll</a> with <a href="https://github.com/cotes2020/jekyll-theme-chirpy" target="_blank" rel="noopener">Chirpy</a> theme.</p></div></div></footer></div><div id="search-result-wrapper" class="d-flex justify-content-center unloaded"><div class="col-12 col-sm-11 post-content"><div id="search-hints"><div id="access-tags"><div class="panel-heading">Trending Tags</div><div class="d-flex flex-wrap mt-3 mb-1 mr-3"> <a class="post-tag" href="/tags/evm/">EVM</a> <a class="post-tag" href="/tags/smart-contracts/">smart contracts</a> <a class="post-tag" href="/tags/solidity/">solidity</a> <a class="post-tag" href="/tags/security/">security</a> <a class="post-tag" href="/tags/accounting/">accounting</a> <a class="post-tag" href="/tags/beancount/">beancount</a> <a class="post-tag" href="/tags/defi/">DeFi</a> <a class="post-tag" href="/tags/development/">development</a> <a class="post-tag" href="/tags/personal/">personal</a></div></div></div><div id="search-results" class="d-flex flex-wrap justify-content-center text-muted mt-3"></div></div></div></div><div id="mask"></div><a id="back-to-top" href="#" aria-label="back-to-top" class="btn btn-lg btn-box-shadow" role="button"> <i class="fas fa-angle-up"></i> </a><div id="notification" class="toast" role="alert" aria-live="assertive" aria-atomic="true" data-animation="true" data-autohide="false"><div class="toast-header"> <button type="button" class="ml-2 ml-auto close" data-dismiss="toast" aria-label="Close"> <span aria-hidden="true">&times;</span> </button></div><div class="toast-body text-center pt-0"><p class="pl-2 pr-2 mb-3">A new version of content is available.</p><button type="button" class="btn btn-primary" aria-label="Update"> Update </button></div></div><script src="/assets/lib/simple-jekyll-search-1.10.0/simple-jekyll-search.min.js"></script> <script> SimpleJekyllSearch({ searchInput: document.getElementById('search-input'), resultsContainer: document.getElementById('search-results'), json: '/assets/js/data/search.json', searchResultTemplate: '<div class="pl-1 pr-1 pl-sm-2 pr-sm-2 pl-lg-4 pr-lg-4 pl-xl-0 pr-xl-0"> <a href="{url}">{title}</a><div class="post-meta d-flex flex-column flex-sm-row text-muted mt-1 mb-1"> {categories} {tags}</div><p>{snippet}</p></div>', noResultsText: '<p class="mt-5">Oops! No results found.</p>', templateMiddleware: function(prop, value, template) { if (prop === 'categories') { if (value === '') { return `${value}`; } else { return `<div class="mr-sm-4"><i class="far fa-folder fa-fw"></i>${value}</div>`; } } if (prop === 'tags') { if (value === '') { return `${value}`; } else { return `<div><i class="fa fa-tag fa-fw"></i>${value}</div>`; } } } }); </script> <script src="/assets/lib/magnific-popup-1.1.0/jquery.magnific-popup.min.js"></script> <script src="/assets/lib/lozad-1.16.0/lozad.min.js"></script> <script src="/assets/lib/clipboard-2.0.9/clipboard.min.js"></script> <script src="/assets/lib/dayjs-1.10.7/dayjs.min.js"></script> <script src="/assets/lib/dayjs-1.10.7/locale/en.min.js"></script> <script src="/assets/lib/dayjs-1.10.7/plugin/relativeTime.min.js"></script> <script src="/assets/lib/dayjs-1.10.7/plugin/localizedFormat.min.js"></script> <script defer src="/assets/js/dist/post.min.js"></script> <script> /* see: <https://docs.mathjax.org/en/latest/options/input/tex.html#tex-options> */ MathJax = { tex: { inlineMath: [ /* start/end delimiter pairs for in-line math */ ['$','$'], ['\\(','\\)'] ], displayMath: [ /* start/end delimiter pairs for display math */ ['$$', '$$'], ['\\[', '\\]'] ] } }; </script> <script src="/assets/lib/polyfill-v3-es6/polyfill.min.js"></script> <script id="MathJax-script" async src="/assets/lib/mathjax-3.2.0/tex-chtml.js"> </script> <script src="/assets/lib/bootstrap-4.6.1/bootstrap.bundle.min.js"></script> <script defer src="/app.js"></script>

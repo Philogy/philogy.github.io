@@ -23,7 +23,7 @@ timezone: Europe/Berlin
 
 title: Philogy's blog                          # the main title
 
-tagline: My ideas, research and public journal    # it will display as the sub-title
+tagline: Phil's ideas & research.    # it will display as the sub-title
 
 description: >-                        # used by seo meta and the atom feed
   Philippe Dumonet's blog covering blockchains, compilers, security and more
